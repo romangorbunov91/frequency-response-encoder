@@ -1,0 +1,13 @@
+/*
+
+!.gitignore
+!/src/
+!/train_logs/
+!/scratch/
+!/readme_img/
+
+!/README.md
+!/requirements.txt
+!debug_notebook.ipynb
+
+**/__pycache__/
