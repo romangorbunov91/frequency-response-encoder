@@ -1,0 +1,17 @@
+{
+  "model_name": "base_model",
+  "feature_list": [18, 36, 72, 144],
+  "checkpoints_save_policy": "best",
+  "checkpoints_metric": "dice",
+  "early_stop_number": 50,
+  "dataset_name": "zeros-poles-dataset",
+  "workers": 4,
+  "input_size": [2, 512],
+  "base_lr": 0.001,
+  "weight_decay": 0.0001,
+  "solver_type": "Adam",
+  "batch_size": 1000,
+  "epochs": 10,
+  "scheduler_on": false,
+  "scheduler_patience": 30
+}

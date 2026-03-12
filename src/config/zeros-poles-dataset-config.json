@@ -1,0 +1,7 @@
+{
+  "dataset_name": "zeros-poles-dataset",
+  "train_dir": "train",
+  "val_dir": "val",
+  "test_dir": "test",
+  "length": 512
+}

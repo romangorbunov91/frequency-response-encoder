@@ -1,0 +1,7 @@
+{
+  "data_dir": "./datasets/",
+  "checkpoints_dir": "./checkpoints/",
+  "logs_dir": "./train_logs/",
+  "device": "cuda",
+  "seed": 1991
+}
