@@ -1,43 +1,10 @@
 # Энкодер
 
-
-
-В [general_functions.py](utils/general_functions.py) представлены функции:
-- [transfer_function](utils/general_functions.py) - вычисление массива комплексного коэффициента передачи,
-- [generate_masks](utils/general_functions.py) - генерация int-координат нулей и полюсов,
-- [calculate_freq_zeros_poles](utils/general_functions.py) - преобразование int-координат нулей и полюсов в частоты нулей/полюсов для использования в [transfer_function](utils/general_functions.py).
-
-## Конфигурирование
-
-Параметры генерации задаются в [config.json](config/config.json):
-
-- `split`: `str` - `train`, `val`, `test`.
-- `size`: `int` - количество генерируемых данных на каждый набор нулей/полюсов.
-- `seed`: `int` или `null`.
-- `length`: `int` - размер одного элемента.
-- `fmin`: `[float, float]` - диапазон для нижней границы частот.
-- `fmax`: `[float, float]` - диапазон для верхней границы частот.
-- `Nzp_max`: `int` - максимальное количество интеграторов.
-- `Nlp_max`: `int` - максимальное количество полюсов левых.
-- `Nrp_max`: `int` - максимальное количество полюсов правых.
-- `Nlz_max`: `int` - максимальное количество нулей левых.
-- `Nrz_max`: `int` - максимальное количество нулей правых.
+```
+python src\main.py --hypes src\config\base-model-config.json
+```
 
 ## Структура датасета
-
-Каждой конфигурации `[Nzp, Nlp, Nrp, Nlz, Nrz]` соответствуют `size`- элементов с разным расположением нулей/полюсов и разным диапазоном частот. Количество интеграторов (`zp`), полюсов (`nlp`, `nrp`) и нулей (`nlz`, `nrz`)  зашифровано в имени файла:
-
-`nzp_nlp_nrp_nlz_nrz_xxx.csv`
-
-где `xxx` - порядковый номер из `size`.
-
-Например, `1zp_2lp_0rp_1lz_1rz_001.csv`:
-- `zero_poles`: 1,
-- `left_poles`: 2,
-- `right_poles`: 0,
-- `left_zeros`: 1,
-- `right_zeros`: 1.
-- `001` - номер примера такой конфигурации; всего из `size`-примеров.
 
 ```
 project/
@@ -72,14 +39,6 @@ project/
 - `left_zeros`: `List[int]` - координаты нулей левых,
 - `right_zeros`: `List[int]` - координаты нулей правых.
 
-## Запуск на генерацию
-
-Генерация датасета осуществляется через [main.py](main.py). При необходимости сгенерировать все 3 набора `split`: `str` - `train`, `val`, `test` необходимо последовательно задать в [config.json](config/config.json) соответствующие `split` и `size`; каждый раз выполнять
-
-```
-python src/main.py
-```
-
 ## Даталоудер
 
 Создан датакласс [ZerosPolesDataset.py](utils/ZerosPolesDataset.py), наследующий от `torch.utils.data.Dataset` следующие методы:
@@ -106,22 +65,3 @@ python src/main.py
 - `time_delay`: `List[float]` - сдвиг/задержка по времени; выбирается случайным образом из диапазона `[min, max]>=0.0`. **Отключить: `time_delay=[0.0, 0.0]`**.
 - `noise_level`: `List[float]` - масштабирующй коэффициент шума; выбирается случайным образом из диапазона `[min, max]>=0.0`. Генерируемый шум сглаживается экспоненциально с коэффициентом `noise_filter`: `float`от 0.1 до 1.0. **Отключить: `noise_level=[0.0, 0.0]`**.
 - `gain`: `List[float]` - масштабирующий коэффициент; выбирается случайным образом из диапазона `[min, max]`. Допустимо включать в диапазон положительные/отрицательные числа. **Отключить: `gain=[1.0, 1.0]`**.
-
-Пример использования даталоудера приведен в [debug_notebook.ipynb](debug_notebook.ipynb).
-
-## Приложения
-### Визуализация примеров (нет аугментации)
-
-<p align="center" width="100%">
-  <img src="./readme_img/dataset_samples.png"
-  style="background-color: white; padding: 0;
-  width="100%" />
-</p>
-
-### Визуализация примеров (аугментации)
-
-<p align="center" width="100%">
-  <img src="./readme_img/augmented_dataset_samples.png"
-  style="background-color: white; padding: 0;
-  width="100%" />
-</p>

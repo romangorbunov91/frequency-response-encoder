@@ -1,0 +1,71 @@
+{
+    "metadata": {
+        "run_id": "20260313_105700",
+        "model": {
+            "name": "base-model",
+            "input_size": [
+                2,
+                512
+            ],
+            "param_count": 26532,
+            "feature_list": [
+                32
+            ]
+        },
+        "dataset": {
+            "name": "zeros-poles-dataset",
+            "item_size": [
+                2,
+                512
+            ],
+            "train_size": 7200,
+            "val_size": 7200,
+            "test_size": 7200
+        },
+        "device": "cpu",
+        "seed": 1991,
+        "workers": 4,
+        "batch_size": 1200,
+        "solver_type": "Adam"
+    },
+    "summary": {
+        "best_val_dice": 0.0038835049296418824,
+        "best_epoch": 1,
+        "final_train_dice": 0.0016930347146985694,
+        "final_val_dice": 3.009259276950023e-10
+    },
+    "train_log": [
+        {
+            "epoch": 1,
+            "lr": 0.001,
+            "train_loss": 0.8304699659347534,
+            "train_dice": 0.0035045171001305184,
+            "train_iou": 0.0017553799552842975,
+            "train_accuracy": 0.7005503376324972,
+            "val_loss": 0.8286737302939097,
+            "val_dice": 0.0038835049296418824,
+            "val_iou": 0.00194553021962444,
+            "val_accuracy": 0.74951171875,
+            "test_loss": 0.8286737302939097,
+            "test_dice": 0.0038835049296418824,
+            "test_iou": 0.00194553021962444,
+            "test_accuracy": 0.74951171875
+        },
+        {
+            "epoch": 2,
+            "lr": 0.001,
+            "train_loss": 0.817803680896759,
+            "train_dice": 0.0016930347146985694,
+            "train_iou": 0.0008478109136432673,
+            "train_accuracy": 0.9557237525780996,
+            "val_loss": 0.8172321319580078,
+            "val_dice": 3.009259276950023e-10,
+            "val_iou": 3.009259276950023e-10,
+            "val_accuracy": 0.99853515625,
+            "test_loss": 0.8172321319580078,
+            "test_dice": 3.009259276950023e-10,
+            "test_iou": 3.009259276950023e-10,
+            "test_accuracy": 0.99853515625
+        }
+    ]
+}

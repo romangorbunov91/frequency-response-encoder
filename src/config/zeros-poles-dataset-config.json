@@ -3,5 +3,5 @@
   "train_dir": "train",
   "val_dir": "val",
   "test_dir": "test",
-  "length": 512
+  "item_size": [2, 512]
 }

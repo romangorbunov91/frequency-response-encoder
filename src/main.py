@@ -7,8 +7,8 @@ from datetime import datetime
 import argparse
 from typing import Dict, List, Any, Optional
 
-from .train import ResNetTrainer, UNetTrainer
-from .utils.configer import Configer
+from train import ModelTrainer
+from utils.configer import Configer
 
 def set_seed(seed: int) -> None:
     random.seed(seed)
@@ -25,6 +25,7 @@ def build_output_dict(
     train_history: Dict[str, List[float]],
     train_size: int,
     val_size: int,
+    test_size: int,
     model_param_count: int
 ) -> Dict[str, Any]:
 
@@ -32,15 +33,16 @@ def build_output_dict(
     metadata = {
         "run_id": datetime.now().strftime("%Y%m%d_%H%M%S"),
         "model": {
-            "name": configer.model_config.get("model_name"),
-            "input_size": configer.model_config.get("input_size"),
+            "name": configer.model_config["model_name"],
+            "input_size": configer.model_config["input_size"],
             "param_count": model_param_count,
         },
         "dataset": {
-            "name": configer.dataset_config.get("dataset_name"),
-            "img_size": configer.dataset_config.get("img_size"),
+            "name": configer.dataset_config["dataset_name"],
+            "item_size": configer.dataset_config["item_size"],
             "train_size": train_size,
             "val_size": val_size,
+            "test_size": test_size,
         },
         "device": configer.device,
         "seed": configer.general_config.get("seed"),
@@ -50,24 +52,9 @@ def build_output_dict(
     }
 
     # Add model-specific details.
-    if metadata['model']['name'] == "customResNet":
+    if metadata['model']['name'] == "base-model":
         metadata['model'].update({
-            "layers_num": configer.model_config.get("layers_num"),
-            "block_size": configer.model_config.get("block_size"),
-            "class_size": len(configer.dataset_config.get("selected_classes")),
-            "selected_classes": configer.dataset_config.get("selected_classes")
-        })
-    
-    elif metadata['model']['name'] == "customUNet":
-        metadata['model']['feature_list'] = configer.model_config.get("feature_list")
-    
-    elif metadata['model']['name'] == "customResNetUNet":
-        metadata['model']['feature_list'] = configer.model_config.get("feature_list")
-
-        metadata['model'].update({
-            "backbone_model_name": configer.model_config.get("backbone_model_name"),
-            "backbone_layers_num": configer.model_config.get("backbone_layers_num"),
-            "backbone_block_size": configer.model_config.get("backbone_block_size")
+            "feature_list": configer.model_config["feature_list"]
         })
     else:
         raise NotImplementedError(f"Model not supported: {metadata['model']['name']}")
@@ -77,8 +64,7 @@ def build_output_dict(
     for i in range(len(train_history["epoch"])):
         log_entry = {
             "epoch": train_history["epoch"][i],
-            "lr": train_history["lr"][i],
-            "encoder_lr": train_history["encoder_lr"][i]
+            "lr": train_history["lr"][i]
             }
         for key in train_history:
             if key != "epoch" and key != "lr" and key != "encoder_lr":
@@ -123,19 +109,19 @@ if __name__ == "__main__":
     configer = Configer(args)
     
     # Read config-files.
-    hyperparameters_dir = Path("./src/hyperparameters/")
+    config_dir = Path("./src/config/")
     
-    config_path = hyperparameters_dir / "config.json"
+    config_path = config_dir / "config.json"
     assert config_path.exists(), f"Config not found: {config_path}"
     with open(config_path, "r") as f:
         configer.general_config = json.load(f)
     
-    model_config_path = hyperparameters_dir / f"{configer.get('model_name')}-config.json"
+    model_config_path = config_dir / f"{configer['model_name']}-config.json"
     assert model_config_path.exists(), f"Config not found: {model_config_path}"
     with open(model_config_path, "r") as f:
         configer.model_config = json.load(f)
     
-    dataset_config_path = hyperparameters_dir / f"{configer.get('dataset_name')}-config.json"
+    dataset_config_path = config_dir / f"{configer['dataset_name']}-config.json"
     assert dataset_config_path.exists(), f"Config not found: {dataset_config_path}"
     with open(dataset_config_path, "r") as f:
         configer.dataset_config = json.load(f)
@@ -144,37 +130,19 @@ if __name__ == "__main__":
 
     configer.device = configer.general_config.get("device").lower() if torch.cuda.is_available() else 'cpu'
     
-    if configer.model_config.get('model_name') == "customResNet":
+    model_name = configer.model_config['model_name']
+    if model_name == "base-model":
+        trainer = ModelTrainer(configer)
         configer.output_file_name = (
-            f"{str(configer.model_config.get('model_name'))}"
+            f"{str(model_name)}"
         )
-
-    elif configer.model_config.get('model_name') == "customUNet":
-        configer.output_file_name = (
-            f"{str(configer.model_config.get('model_name'))}"
-        )
-    elif configer.model_config.get('model_name') == "customResNetUNet":
-        
-        configer.output_file_name = str(configer.model_config['model_name'])
-        
-        if bool(configer.model_config['backbone_pretrained']):
-            configer.output_file_name += "_pretrained"
-
     else:
-        raise NotImplementedError(f"Model not supported: {configer.model_config.get('model_name')}")
-
-    if configer.model_config.get('model_name') == "customResNet":
-        trainer = ResNetTrainer(configer)
-    elif (configer.model_config.get('model_name') == "customUNet") or \
-        (configer.model_config.get('model_name') == "customResNetUNet"):
-        trainer = UNetTrainer(configer)
-    else:
-        raise NotImplementedError(f"Model not supported: {configer.model_config.get('model_name')}")
+        raise NotImplementedError(f"Model not supported: {model_name}")
     
     trainer.init_model()
-    train_history, train_size, val_size, model_param_count = trainer.train()
+    train_history, train_size, val_size, test_size, model_param_count = trainer.train()
     
-    logs_dir = Path(configer.general_config.get("logs_dir"))
+    logs_dir = Path(configer.general_config["logs_dir"])
     logs_dir.mkdir(parents=True, exist_ok=True)
     
     output_dict = build_output_dict(
@@ -182,6 +150,7 @@ if __name__ == "__main__":
         train_history = train_history,
         train_size = train_size,
         val_size = val_size,
+        test_size = test_size,
         model_param_count = model_param_count)
     
     with open(logs_dir / (configer.output_file_name + '.json'), "w") as f:
