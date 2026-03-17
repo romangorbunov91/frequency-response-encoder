@@ -151,7 +151,7 @@ class ModelTrainer(MetricsHistory):
     def init_model(self):
         """Initialize model and other data for procedure"""
         
-        self.loss_func = CombinedLoss(bce_weight=0.5, dice_weight=0.5).to(self.device)
+        self.loss_func = CombinedLoss(bce_weight=0.0, dice_weight=1.0).to(self.device)
         
         mdl_input_size = self.configer.model_config['input_size']
 
@@ -289,7 +289,7 @@ class ModelTrainer(MetricsHistory):
                     accuracy = pixel_accuracy(outputs.detach(), masks.detach()))
         
         ret = self.model_utility.save(
-            self.metrics[self.configer.model_config.get("checkpoints_metric")]["val"].avg,
+            self.metrics[self.configer.model_config["checkpoints_metric"]]["val"].avg,
             self.net,
             self.optimizer,
             self.epoch + 1,
@@ -329,7 +329,7 @@ class ModelTrainer(MetricsHistory):
             self.__test()
             
             if self.scheduler is not None:
-                self.scheduler.step(self.metrics[self.configer.model_config.get("checkpoints_metric")]['val'].avg)
+                self.scheduler.step(self.metrics[self.configer.model_config["checkpoints_metric"]]['val'].avg)
                 print('lr_0:', self.optimizer.param_groups[0]["lr"])
                 print('lr_1:', self.optimizer.param_groups[1]["lr"])
 
@@ -339,7 +339,7 @@ class ModelTrainer(MetricsHistory):
 
             if ret < 0:
                 print("Got no improvement for {} subsequent epochs. Finished epoch {}, than stopped."
-                      .format(self.configer.model_config.get("early_stop_number"), self.epoch_init + n+1))
+                      .format(self.configer.model_config["early_stop_number"], self.epoch_init + n+1))
                 break
             
             self.epoch += 1
