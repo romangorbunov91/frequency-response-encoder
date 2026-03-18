@@ -18,28 +18,6 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
-class PerChannelBCEWithLogitsLoss(nn.Module):
-    def __init__(self):
-        super(PerChannelBCEWithLogitsLoss, self).__init__()
-        # Set reduction='none' to handle averaging manually.
-        self.bce = nn.BCEWithLogitsLoss(reduction='none')
-    
-    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        # Input shapes: [B, C, Length]
-        
-        # 1. Calculate loss element-wise (no reduction yet).
-        # loss shape: [B, C, Length].
-        loss = self.bce(logits, targets)
-        
-        # 2. Average over spatial dimensions (Length) first.
-        # This gives us a loss value per Channel per Batch item
-        # loss shape: [B, C].
-        loss = loss.mean(dim=2) 
-        
-        # 3. Average over Channels and Batch.
-        # This ensures each channel contributes equally to the final scalar loss
-        return loss.mean()
-
 class DiceLoss(nn.Module):
     """   
     Dice = 2 * |X ∩ Y| / (|X| + |Y|)
@@ -54,13 +32,10 @@ class DiceLoss(nn.Module):
         predictions = torch.sigmoid(logits)
         targets = targets.to(predictions.dtype)
 
-        B, C = logits.shape[0], logits.shape[1]
-        predictions = predictions.reshape(B, C, -1)
-        targets = targets.reshape(B, C, -1)
-
         # Dice coefficient.
         intersection = (predictions * targets).sum(dim=2)
         union = predictions.sum(dim=2) + targets.sum(dim=2)
+        
         dice = (2. * intersection + self.eps) / (union + self.eps)
         
         # Dice loss.
@@ -72,7 +47,7 @@ class CombinedLoss(nn.Module):
         super(CombinedLoss, self).__init__()
         self.bce_weight = bce_weight
         self.dice_weight = dice_weight
-        self.bce = PerChannelBCEWithLogitsLoss()
+        self.bce = nn.BCEWithLogitsLoss()
         self.dice = DiceLoss()
     
     def forward(self, logits, targets):
@@ -88,12 +63,10 @@ def dice_coefficient(logits, targets, threshold=0.5, eps=1e-6):
     predictions = (torch.sigmoid(logits) > threshold).float()
     targets = targets.to(predictions.dtype)
     
-    B, C = logits.shape[0], logits.shape[1]
-    predictions = predictions.reshape(B, C, -1)
-    targets = targets.reshape(B, C, -1)
-    
     intersection = (predictions * targets).sum(dim=2)
-    dice = (2. * intersection + eps) / (predictions.sum(dim=2) + targets.sum(dim=2) + eps)
+    union = predictions.sum(dim=2) + targets.sum(dim=2)
+    
+    dice = (2. * intersection + eps) / (union + eps)
     
     return dice.mean().item()
 
@@ -103,15 +76,11 @@ def iou_score(logits, targets, threshold=0.5, eps=1e-6):
     
     predictions = (torch.sigmoid(logits) > threshold).float()
     targets = targets.to(predictions.dtype)
-    
-    B, C = logits.shape[0], logits.shape[1]
-    predictions = predictions.reshape(B, C, -1)
-    targets = targets.reshape(B, C, -1)
-    
+
     intersection = (predictions * targets).sum(dim=2)
-    union = predictions.sum(dim=2) + targets.sum(dim=2) - intersection
+    union = predictions.sum(dim=2) + targets.sum(dim=2)
     
-    iou = (intersection + eps) / (union + eps)
+    iou = (intersection + eps) / (union - intersection + eps)
     
     return iou.mean().item()
 
@@ -121,10 +90,6 @@ def pixel_accuracy(logits, targets, threshold=0.5):
     
     predictions = (torch.sigmoid(logits) > threshold).float()
     targets = targets.to(predictions.dtype)
-    
-    B, C = logits.shape[0], logits.shape[1]
-    predictions = predictions.reshape(B, C, -1)
-    targets = targets.reshape(B, C, -1)
     
     correct = (predictions == targets).float().sum(dim=2)
     
