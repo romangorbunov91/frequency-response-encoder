@@ -151,7 +151,7 @@ class ModelTrainer(MetricsHistory):
     def init_model(self):
         """Initialize model and other data for procedure"""
         
-        self.loss_func = CombinedLoss(bce_weight=0.0, dice_weight=1.0).to(self.device)
+        self.loss_func = CombinedLoss(bce_weight=1.0, dice_weight=0.0).to(self.device)
         
         mdl_input_size = self.configer.model_config['input_size']
 
@@ -174,16 +174,16 @@ class ModelTrainer(MetricsHistory):
         # Set optimizer.
         self.optimizer = update_optimizer(
             net = self.net,
-            optim = self.configer.model_config.get('solver_type'),
-            lr = self.configer.model_config.get('base_lr'),
-            decay = self.configer.model_config.get('weight_decay')
+            optim = self.configer.model_config['solver_type'],
+            lr = self.configer.model_config['base_lr'],
+            decay = self.configer.model_config['weight_decay']
             )
         
         if optim_dict is None:
-            print(f"Starting training {self.configer.model_config.get('model_name')} from scratch using {self.configer.model_config['solver_type']}.")
+            print(f"Starting training {self.configer.model_config['model_name']} from scratch using {self.configer.model_config['solver_type']}.")
         else:
             self.optimizer.load_state_dict(optim_dict)
-            print(f"Resuming training {self.configer.model_config.get('model_name')} from epoch {self.epoch} using {self.configer.model_config['solver_type']}.")
+            print(f"Resuming training {self.configer.model_config['model_name']} from epoch {self.epoch} using {self.configer.model_config['solver_type']}.")
         
         if bool(self.configer.model_config['scheduler_on']):
             # Set scheduler.

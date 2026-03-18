@@ -1,6 +1,6 @@
 {
   "model_name": "base-model",
-  "feature_list": [1024],
+  "feature_list": [512, 1024],
   "checkpoints_save_policy": "best",
   "checkpoints_metric": "dice",
   "early_stop_number": 50,
@@ -11,7 +11,7 @@
   "weight_decay": 0.0001,
   "solver_type": "Adam",
   "batch_size": 144,
-  "epochs": 2,
+  "epochs": 20,
   "scheduler_on": false,
   "scheduler_patience": 30
 }
