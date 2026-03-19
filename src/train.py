@@ -175,7 +175,8 @@ class ModelTrainer(MetricsHistory):
             net = self.net,
             optim = self.configer.model_config['solver_type'],
             lr = self.configer.model_config['base_lr'],
-            decay = self.configer.model_config['weight_decay']
+            decay = self.configer.model_config['weight_decay'],
+            encoder_lr = self.configer.model_config['base_lr'],
             )
         
         if optim_dict is None:
@@ -265,7 +266,8 @@ class ModelTrainer(MetricsHistory):
                 dice = dice_coefficient(outputs.detach(), masks.detach()),
                 iou = iou_score(outputs.detach(), masks.detach()),
                 accuracy = pixel_accuracy(outputs.detach(), masks.detach()))
-
+        print('Prediction:', ((torch.sigmoid(outputs[0]) > 0.4).float()).sum(dim=1).detach())
+        print('Ground:', masks[0].sum(dim=1).detach())
     def __val(self):
         """Validation function."""
         self.net.eval()
