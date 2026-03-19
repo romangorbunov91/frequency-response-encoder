@@ -4,6 +4,13 @@
 python src\main.py --hypes src\config\base-model-config.json
 ```
 
+When "Shape" matters more than Amplitude: (e.g., detecting a spike pattern regardless of how loud it is)
+InstanceNorm is actually a great choice. It will make the model invariant to signal strength, focusing only on the morphology of the wave.
+the model focuses on shape rather than intensity
+
+https://arxiv.org/abs/1607.08022
+
+
 ## Структура датасета
 
 ```
