@@ -137,7 +137,7 @@ class ModelTrainer(MetricsHistory):
             time_delay=[0.0, 1e-9],
             noise_level=[5e-3, 30e-3],
             noise_reduce=2,
-            gain=[-1e3, 1e3]
+            gain=[-1e2, 1e2]
         )
         
         self.val_transforms = None
@@ -204,8 +204,9 @@ class ModelTrainer(MetricsHistory):
         if self.dataset == "zeros-poles-dataset":            
             self.train_loader = DataLoader(
                 ZerosPolesDataset(
-                    dataset_dir = self.dataset_path,
-                    split = 'train',
+                    dataset_dir=self.dataset_path,
+                    split='train',
+                    mask_halfwindow=self.configer.model_config["mask_halfwindow"],
                     transforms=self.train_transforms
                     ), 
                 batch_size=self.configer.model_config["batch_size"],
@@ -216,8 +217,9 @@ class ModelTrainer(MetricsHistory):
 
             self.val_loader = DataLoader(
                 ZerosPolesDataset(
-                    dataset_dir = self.dataset_path,
-                    split = 'val',
+                    dataset_dir=self.dataset_path,
+                    split='val',
+                    mask_halfwindow=self.configer.model_config["mask_halfwindow"],
                     transforms=self.val_transforms
                     ), 
                 batch_size=self.configer.model_config["batch_size"],
@@ -227,8 +229,9 @@ class ModelTrainer(MetricsHistory):
             
             self.test_loader = DataLoader(
                 ZerosPolesDataset(
-                    dataset_dir = self.dataset_path,
-                    split = 'test',
+                    dataset_dir=self.dataset_path,
+                    split='test',
+                    mask_halfwindow=self.configer.model_config["mask_halfwindow"],
                     transforms=self.test_transforms
                     ), 
                 batch_size=self.configer.model_config["batch_size"],

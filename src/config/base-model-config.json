@@ -1,10 +1,11 @@
 {
   "model_name": "base-model",
+  "dataset_name": "zeros-poles-dataset",
   "feature_list": [32, 64, 128, 256],
+  "mask_halfwindow": 8,
   "checkpoints_save_policy": "best",
   "checkpoints_metric": "dice",
   "early_stop_number": 50,
-  "dataset_name": "zeros-poles-dataset",
   "workers": 4,
   "input_size": [2, 512],
   "base_lr": 0.001,

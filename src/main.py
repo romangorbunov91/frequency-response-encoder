@@ -35,6 +35,7 @@ def build_output_dict(
         "model": {
             "name": configer.model_config["model_name"],
             "input_size": configer.model_config["input_size"],
+            "mask_halfwindow": configer.model_config["mask_halfwindow"],
             "param_count": model_param_count,
         },
         "dataset": {
