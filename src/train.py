@@ -137,7 +137,7 @@ class ModelTrainer(MetricsHistory):
             time_delay=[0.0, 1e-9],
             noise_level=[5e-3, 30e-3],
             noise_reduce=2,
-            gain=[-1e2, 1e2]
+            #gain=[-1e2, 1e2]
         )
         
         self.val_transforms = None
@@ -259,7 +259,7 @@ class ModelTrainer(MetricsHistory):
             self.optimizer.zero_grad()
             loss = self.loss_func(outputs, masks)
             loss.backward()
-            nn.utils.clip_grad_norm_(self.net.parameters(), max_norm=1)
+            #nn.utils.clip_grad_norm_(self.net.parameters(), max_norm=1)
             self.optimizer.step()
 
             self.update_metrics(
