@@ -13,7 +13,7 @@ class baseConv(nn.Module):
                 kernel_size=3,
                 padding=1
             ),
-            nn.BatchNorm1d(num_features=out_channels),
+            #nn.BatchNorm1d(num_features=out_channels),
             nn.ReLU(inplace=True),
         )
     
