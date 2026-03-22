@@ -269,8 +269,7 @@ class ModelTrainer(MetricsHistory):
                 dice = dice_coefficient(outputs.detach(), masks.detach()),
                 iou = iou_score(outputs.detach(), masks.detach()),
                 accuracy = pixel_accuracy(outputs.detach(), masks.detach()))
-        print('Prediction:', ((torch.sigmoid(outputs[0]) > 0.4).float()).sum(dim=1).detach())
-        print('Ground:', masks[0].sum(dim=1).detach())
+        
     def __val(self):
         """Validation function."""
         self.net.eval()
@@ -323,7 +322,11 @@ class ModelTrainer(MetricsHistory):
                     dice = dice_coefficient(outputs.detach(), masks.detach()),
                     iou = iou_score(outputs.detach(), masks.detach()),
                     accuracy = pixel_accuracy(outputs.detach(), masks.detach()))
-    
+        
+        rand_int = torch.randint(0, len(self.test_loader), (1,)).item()
+        print('Prediction:', ((torch.sigmoid(outputs[rand_int]) > 0.5).float()).sum(dim=1).detach())
+        print('Ground:', masks[rand_int].sum(dim=1).detach())
+
     def train(self):
         
         for n in range(self.configer['epochs']):
