@@ -7,14 +7,8 @@ class baseConv(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(baseConv, self).__init__()
         self.base_conv = nn.Sequential(
-            nn.Conv1d(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                kernel_size=3,
-                padding=1
-            ),
-            #nn.BatchNorm1d(num_features=out_channels),
-            nn.ReLU(inplace=True),
+            
+            
         )
     
     def forward(self, x):
@@ -34,88 +28,263 @@ class _base_model(nn.Module):
             num_features=in_channels, 
             affine=True  # Allows model to learn optimal scale/shift.
         )
-
-        self.encoder_blocks = nn.ModuleList()
-        self.decoder_blocks = nn.ModuleList()
-
-        prev_channels = in_channels
-        for feature in features:
-            self.encoder_blocks.append(
-                baseConv(
-                    in_channels=prev_channels,
-                    out_channels=feature)
-                )
-            prev_channels = feature
-        '''
-        self.initial_conv = nn.Conv1d(
-            in_channels=in_channels,
-            out_channels=features[0],
-            kernel_size=3,
-            padding=1
+        self.encoder1_1 = nn.Sequential(
+            nn.Conv1d(
+                in_channels=in_channels,
+                out_channels=features[0],
+                kernel_size=32,
+                stride=2,
+                padding=15
+            ),
+            #nn.BatchNorm1d(num_features=features[0]),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(
+                in_channels=features[0],
+                out_channels=features[0],
+                kernel_size=16,
+                stride=2,
+                padding=7
+            ),
+            #nn.BatchNorm1d(num_features=features[0]),
+            #nn.ReLU(inplace=True),
         )
+
+        self.encoder1_2 = nn.Sequential(
+            nn.Conv1d(
+                in_channels=features[0],
+                out_channels=features[1],
+                kernel_size=16,
+                stride=2,
+                padding=7
+            ),
+            #nn.BatchNorm1d(num_features=features[1]),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(
+                in_channels=features[1],
+                out_channels=features[1],
+                kernel_size=8,
+                stride=2,
+                padding=3
+            ),
+            #nn.BatchNorm1d(num_features=features[1]),
+            #nn.ReLU(inplace=True),
+        )
+
+        self.encoder1_3 = nn.Sequential(
+            nn.Conv1d(
+                in_channels=features[1],
+                out_channels=features[2],
+                kernel_size=8,
+                stride=2,
+                padding=3
+            ),
+            #nn.BatchNorm1d(num_features=features[2]),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(
+                in_channels=features[2],
+                out_channels=features[2],
+                kernel_size=4,
+                stride=2,
+                padding=1
+            ),
+            #nn.BatchNorm1d(num_features=features[2]),
+            #nn.ReLU(inplace=True),
+        )
+
+
+        self.encoder2_1 = nn.Sequential(
+            nn.Conv1d(
+                in_channels=in_channels,
+                out_channels=features[0],
+                kernel_size=16,
+                stride=2,
+                padding=7
+            ),
+            #nn.BatchNorm1d(num_features=features[0]),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(
+                in_channels=features[0],
+                out_channels=features[0],
+                kernel_size=8,
+                stride=2,
+                padding=3
+            ),
+            #nn.BatchNorm1d(num_features=features[0]),
+            #nn.ReLU(inplace=True),
+        )
+
+        self.encoder2_2 = nn.Sequential(
+            nn.Conv1d(
+                in_channels=features[0],
+                out_channels=features[1],
+                kernel_size=8,
+                stride=2,
+                padding=3
+            ),
+            #nn.BatchNorm1d(num_features=features[1]),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(
+                in_channels=features[1],
+                out_channels=features[1],
+                kernel_size=4,
+                stride=2,
+                padding=1
+            ),
+            #nn.BatchNorm1d(num_features=features[1]),
+            #nn.ReLU(inplace=True),
+        )
+
+        self.encoder2_3 = nn.Sequential(
+            nn.Conv1d(
+                in_channels=features[1],
+                out_channels=features[2],
+                kernel_size=4,
+                stride=2,
+                padding=1
+            ),
+            #nn.BatchNorm1d(num_features=features[2]),
+            nn.ReLU(inplace=True),
+            nn.Conv1d(
+                in_channels=features[2],
+                out_channels=features[2],
+                kernel_size=2,
+                stride=2,
+                padding=0
+            ),
+            #nn.BatchNorm1d(num_features=features[2]),
+            #nn.ReLU(inplace=True),
+        )
+
         '''
         self.pool = nn.MaxPool1d(
             kernel_size=2,
             stride=2
         )
-        
-        self.bottleneck = baseConv(
-            in_channels=features[-1],
-            out_channels=features[-1] * 2)
+        '''
+        self.bottleneck = nn.Sequential(
+            nn.Conv1d(
+                in_channels=features[-1],
+                out_channels=2*features[-1],
+                kernel_size=2,
+                stride=2,
+                padding=0
+            ),
+            #nn.BatchNorm1d(num_features=features[-1]),
+            nn.ReLU(inplace=True),
+        )
 
-        for feature in reversed(features):
-            self.decoder_blocks.append(
-                nn.ConvTranspose1d(
-                    in_channels=feature * 2,
-                    out_channels=feature,
+        self.decoder1 = nn.Sequential(
+            nn.ConvTranspose1d(
+                    in_channels=2*features[-1],
+                    out_channels=features[-1],
                     kernel_size=2,
                     stride=2
-                )
-            )
-            self.decoder_blocks.append(
-                baseConv(
-                    in_channels=feature * 2,
-                    out_channels=feature
-                )
-            )
+                ),
+            nn.Conv1d(
+                in_channels=features[-1],
+                out_channels=features[-1],
+                kernel_size=3,
+                padding=1
+            ),
+            #nn.BatchNorm1d(num_features=out_channels),
+            nn.ReLU(inplace=True),
+        )
+
+        self.decoder2 = nn.Sequential(
+            nn.ConvTranspose1d(
+                    in_channels=2*features[-1],
+                    out_channels=features[-2],
+                    kernel_size=4,
+                    stride=4,
+                    padding=0
+                ),
+            nn.Conv1d(
+                in_channels=features[-2],
+                out_channels=features[-2],
+                kernel_size=3,
+                padding=1
+            ),
+            #nn.BatchNorm1d(num_features=out_channels),
+            nn.ReLU(inplace=True),
+        )
+        
+        self.decoder3 = nn.Sequential(
+            nn.ConvTranspose1d(
+                    in_channels=2*features[-2],
+                    out_channels=features[-3],
+                    kernel_size=4,
+                    stride=4,
+                    padding=0
+                ),
+            nn.Conv1d(
+                in_channels=features[-3],
+                out_channels=features[-3],
+                kernel_size=3,
+                padding=1
+            ),
+            #nn.BatchNorm1d(num_features=out_channels),
+            nn.ReLU(inplace=True),
+        )
 
         #self.BN1 = nn.BatchNorm1d(num_features=features[0])
-        #self.activation = nn.ReLU(inplace=True)
-        self.final_conv = nn.Conv1d(
-            in_channels=features[0],
-            out_channels=out_channels,
-            kernel_size=1
+        self.activation = nn.ReLU(inplace=False)
+
+        self.final_conv =  nn.Sequential(
+            nn.ConvTranspose1d(
+                    in_channels=2*features[-3],
+                    out_channels=out_channels,
+                    kernel_size=4,
+                    stride=4,
+                    padding=0
+                ),
+            nn.Conv1d(
+                in_channels=out_channels,
+                out_channels=out_channels,
+                kernel_size=3,
+                padding=1
+            ),
+            #nn.BatchNorm1d(num_features=out_channels),
+            nn.ReLU(inplace=True),
         )
         
         print(f"Encoder features by level: {features}")
     
     def forward(self, x):
-        x = self.input_norm(x)
-
-        skip_connections = []
-
-        for encoder_block in self.encoder_blocks:
-            x = encoder_block(x)
-            skip_connections.append(x)
-            x = self.pool(x)
-
-        x = self.bottleneck(x)
-
-        # Reverse order.
-        skip_connections = skip_connections[::-1]
-
-        for idx in range(0, len(self.decoder_blocks), 2):
-            x = self.decoder_blocks[idx](x)
-            
-            skip_connection = skip_connections[idx // 2]
-
-            x = torch.cat([skip_connection, x], dim=1)
-            
-            x = self.decoder_blocks[idx + 1](x)
         
-        x = self.final_conv(x)
+        input = self.input_norm(x)
 
-        return x
+        enc1_1 = self.encoder1_1(input)
+        enc2_1 = self.encoder2_1(input)
+        sum1 = enc1_1+enc2_1
+        enc12_1 = self.activation(sum1)
+        #print('enc12_1', enc12_1.shape)
+
+        enc1_2 = self.encoder1_2(enc1_1)
+        enc2_2 = self.encoder2_2(enc2_1)
+        sum2 = enc1_2+enc2_2
+        enc12_2 = self.activation(sum2)
+        #print('enc12_2', enc12_2.shape)
+
+        enc1_3 = self.encoder1_3(enc1_2)
+        enc2_3 = self.encoder1_3(enc2_2)
+        sum3 = enc1_3+enc2_3
+        enc12_3 = self.activation(sum3)
+        #print('enc12_3', enc12_3.shape)
+
+        enc_out = self.bottleneck(
+            self.activation(enc12_3)
+            )
+        #print('enc_out', enc_out.shape)
+        dec1 = self.decoder1(enc_out)
+        #print('dec1', dec1.shape)
+        dec2 = self.decoder2(torch.cat([dec1, enc12_3], dim=1))
+        #print('dec2', dec2.shape)
+        dec3 = self.decoder3(torch.cat([dec2, enc12_2], dim=1))
+        #print('dec3', dec3.shape)
+        out = self.final_conv(torch.cat([dec3, enc12_1], dim=1))
+        #print('out', out.shape)
+
+        return out
 
 def base_model(
     in_channels: int,
