@@ -17,7 +17,7 @@ class _base_model(nn.Module):
             affine=True  # Allows model to learn optimal scale/shift.
         )
         self.encoder1_1 = nn.Sequential(
-            #nn.BatchNorm1d(num_features=in_channels),
+            nn.BatchNorm1d(num_features=in_channels),
             nn.Conv1d(
                 in_channels=in_channels,
                 out_channels=features[0],
@@ -25,7 +25,7 @@ class _base_model(nn.Module):
                 stride=2,
                 padding=15
             ),
-            #nn.BatchNorm1d(num_features=features[0]),
+            nn.BatchNorm1d(num_features=features[0]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[0],
@@ -37,7 +37,7 @@ class _base_model(nn.Module):
         )
 
         self.encoder1_2 = nn.Sequential(
-            #nn.BatchNorm1d(num_features=features[0]),
+            nn.BatchNorm1d(num_features=features[0]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[0],
@@ -46,7 +46,7 @@ class _base_model(nn.Module):
                 stride=2,
                 padding=7
             ),
-            #nn.BatchNorm1d(num_features=features[1]),
+            nn.BatchNorm1d(num_features=features[1]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[1],
@@ -58,8 +58,8 @@ class _base_model(nn.Module):
         )
 
         self.encoder1_3 = nn.Sequential(
-            #nn.BatchNorm1d(num_features=features[1]),
-            #nn.ReLU(inplace=True),
+            nn.BatchNorm1d(num_features=features[1]),
+            nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[1],
                 out_channels=features[2],
@@ -67,7 +67,7 @@ class _base_model(nn.Module):
                 stride=2,
                 padding=3
             ),
-            #nn.BatchNorm1d(num_features=features[2]),
+            nn.BatchNorm1d(num_features=features[2]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[2],
@@ -79,7 +79,7 @@ class _base_model(nn.Module):
         )
 
         self.encoder2_1 = nn.Sequential(
-            #nn.BatchNorm1d(num_features=in_channels),
+            nn.BatchNorm1d(num_features=in_channels),
             nn.Conv1d(
                 in_channels=in_channels,
                 out_channels=features[0],
@@ -87,7 +87,7 @@ class _base_model(nn.Module):
                 stride=2,
                 padding=7
             ),
-            #nn.BatchNorm1d(num_features=features[0]),
+            nn.BatchNorm1d(num_features=features[0]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[0],
@@ -99,7 +99,7 @@ class _base_model(nn.Module):
         )
 
         self.encoder2_2 = nn.Sequential(
-            #nn.BatchNorm1d(num_features=features[0]),
+            nn.BatchNorm1d(num_features=features[0]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[0],
@@ -108,7 +108,7 @@ class _base_model(nn.Module):
                 stride=2,
                 padding=3
             ),
-            #nn.BatchNorm1d(num_features=features[1]),
+            nn.BatchNorm1d(num_features=features[1]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[1],
@@ -120,7 +120,7 @@ class _base_model(nn.Module):
         )
 
         self.encoder2_3 = nn.Sequential(
-            #nn.BatchNorm1d(num_features=features[1]),
+            nn.BatchNorm1d(num_features=features[1]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[1],
@@ -129,7 +129,7 @@ class _base_model(nn.Module):
                 stride=2,
                 padding=1
             ),
-            #nn.BatchNorm1d(num_features=features[2]),
+            nn.BatchNorm1d(num_features=features[2]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[2],
@@ -154,7 +154,7 @@ class _base_model(nn.Module):
                 stride=2,
                 padding=0
             ),
-            #nn.BatchNorm1d(num_features=features[-1]),
+            nn.BatchNorm1d(num_features=2*features[-1]),
             nn.ReLU(inplace=True),
         )
 
@@ -171,7 +171,7 @@ class _base_model(nn.Module):
                 kernel_size=3,
                 padding=1
             ),
-            #nn.BatchNorm1d(num_features=out_channels),
+            nn.BatchNorm1d(num_features=features[-1]),
             nn.ReLU(inplace=True),
         )
 
@@ -189,7 +189,7 @@ class _base_model(nn.Module):
                 kernel_size=3,
                 padding=1
             ),
-            #nn.BatchNorm1d(num_features=out_channels),
+            nn.BatchNorm1d(num_features=features[-2]),
             nn.ReLU(inplace=True),
         )
         
@@ -207,11 +207,13 @@ class _base_model(nn.Module):
                 kernel_size=3,
                 padding=1
             ),
-            #nn.BatchNorm1d(num_features=out_channels),
+            nn.BatchNorm1d(num_features=features[-3]),
             nn.ReLU(inplace=True),
         )
 
-        #self.BN1 = nn.BatchNorm1d(num_features=features[0])
+        self.BN1 = nn.BatchNorm1d(num_features=features[0])
+        self.BN2 = nn.BatchNorm1d(num_features=features[1])
+        self.BN3 = nn.BatchNorm1d(num_features=features[2])
         self.activation = nn.ReLU(inplace=False)
 
         self.final_conv =  nn.Sequential(
@@ -228,7 +230,7 @@ class _base_model(nn.Module):
                 kernel_size=3,
                 padding=1
             ),
-            #nn.BatchNorm1d(num_features=out_channels),
+            nn.BatchNorm1d(num_features=out_channels),
             nn.ReLU(inplace=True),
         )
         
@@ -240,17 +242,17 @@ class _base_model(nn.Module):
 
         enc1_1 = self.encoder1_1(input)
         enc2_1 = self.encoder2_1(input)
-        enc12_1 = self.activation(enc1_1+enc2_1)
+        enc12_1 = self.activation(self.BN1(enc1_1+enc2_1))
         #print('enc12_1', enc12_1.shape)
 
         enc1_2 = self.encoder1_2(enc1_1)
         enc2_2 = self.encoder2_2(enc2_1)
-        enc12_2 = self.activation(enc1_2+enc2_2)
+        enc12_2 = self.activation(self.BN2(enc1_2+enc2_2))
         #print('enc12_2', enc12_2.shape)
 
         enc1_3 = self.encoder1_3(enc1_2)
         enc2_3 = self.encoder1_3(enc2_2)    
-        enc12_3 = self.activation(enc1_3+enc2_3)
+        enc12_3 = self.activation(self.BN3(enc1_3+enc2_3))
         #print('enc12_3', enc12_3.shape)
 
         enc_out = self.bottleneck(

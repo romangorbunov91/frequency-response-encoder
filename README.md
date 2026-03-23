@@ -9,7 +9,9 @@ InstanceNorm is actually a great choice. It will make the model invariant to sig
 the model focuses on shape rather than intensity
 
 https://arxiv.org/abs/1607.08022
-
+https://arxiv.org/abs/2012.07436
+https://arxiv.org/abs/1905.10437
+https://github.com/ts-kim/RevIN
 
 ## Структура датасета
 
