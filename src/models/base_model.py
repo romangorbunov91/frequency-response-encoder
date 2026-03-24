@@ -21,18 +21,18 @@ class _base_model(nn.Module):
             nn.Conv1d(
                 in_channels=in_channels,
                 out_channels=features[0],
-                kernel_size=32,
-                stride=2,
-                padding=15
+                kernel_size=65,
+                stride=1,
+                padding=32
             ),
             nn.BatchNorm1d(num_features=features[0]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[0],
                 out_channels=features[0],
-                kernel_size=16,
+                kernel_size=64,
                 stride=2,
-                padding=7
+                padding=31
             ),
         )
 
@@ -42,18 +42,18 @@ class _base_model(nn.Module):
             nn.Conv1d(
                 in_channels=features[0],
                 out_channels=features[1],
-                kernel_size=16,
-                stride=2,
-                padding=7
+                kernel_size=65,
+                stride=1,
+                padding=32
             ),
             nn.BatchNorm1d(num_features=features[1]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[1],
                 out_channels=features[1],
-                kernel_size=8,
+                kernel_size=64,
                 stride=2,
-                padding=3
+                padding=31
             ),     
         )
 
@@ -63,18 +63,18 @@ class _base_model(nn.Module):
             nn.Conv1d(
                 in_channels=features[1],
                 out_channels=features[2],
-                kernel_size=8,
-                stride=2,
-                padding=3
+                kernel_size=65,
+                stride=1,
+                padding=32
             ),
             nn.BatchNorm1d(num_features=features[2]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[2],
                 out_channels=features[2],
-                kernel_size=4,
+                kernel_size=64,
                 stride=2,
-                padding=1
+                padding=31
             ),
         )
 
@@ -83,18 +83,18 @@ class _base_model(nn.Module):
             nn.Conv1d(
                 in_channels=in_channels,
                 out_channels=features[0],
-                kernel_size=16,
-                stride=2,
-                padding=7
+                kernel_size=33,
+                stride=1,
+                padding=16
             ),
             nn.BatchNorm1d(num_features=features[0]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[0],
                 out_channels=features[0],
-                kernel_size=8,
+                kernel_size=32,
                 stride=2,
-                padding=3
+                padding=15
             ),
         )
 
@@ -104,18 +104,18 @@ class _base_model(nn.Module):
             nn.Conv1d(
                 in_channels=features[0],
                 out_channels=features[1],
-                kernel_size=8,
-                stride=2,
-                padding=3
+                kernel_size=33,
+                stride=1,
+                padding=16
             ),
             nn.BatchNorm1d(num_features=features[1]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[1],
                 out_channels=features[1],
-                kernel_size=4,
+                kernel_size=32,
                 stride=2,
-                padding=1
+                padding=15
             ),
         )
 
@@ -125,18 +125,18 @@ class _base_model(nn.Module):
             nn.Conv1d(
                 in_channels=features[1],
                 out_channels=features[2],
-                kernel_size=4,
-                stride=2,
-                padding=1
+                kernel_size=33,
+                stride=1,
+                padding=16
             ),
             nn.BatchNorm1d(num_features=features[2]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=features[2],
                 out_channels=features[2],
-                kernel_size=2,
+                kernel_size=32,
                 stride=2,
-                padding=0
+                padding=15
             ),
         )
 
@@ -179,9 +179,8 @@ class _base_model(nn.Module):
             nn.ConvTranspose1d(
                     in_channels=2*features[-1],
                     out_channels=features[-2],
-                    kernel_size=4,
-                    stride=4,
-                    padding=0
+                    kernel_size=2,
+                    stride=2
                 ),
             nn.Conv1d(
                 in_channels=features[-2],
@@ -197,9 +196,8 @@ class _base_model(nn.Module):
             nn.ConvTranspose1d(
                     in_channels=2*features[-2],
                     out_channels=features[-3],
-                    kernel_size=4,
-                    stride=4,
-                    padding=0
+                    kernel_size=2,
+                    stride=2
                 ),
             nn.Conv1d(
                 in_channels=features[-3],
@@ -220,9 +218,8 @@ class _base_model(nn.Module):
             nn.ConvTranspose1d(
                     in_channels=2*features[-3],
                     out_channels=out_channels,
-                    kernel_size=4,
-                    stride=4,
-                    padding=0
+                    kernel_size=2,
+                    stride=2
                 ),
             nn.Conv1d(
                 in_channels=out_channels,
@@ -239,7 +236,8 @@ class _base_model(nn.Module):
     def forward(self, x):
         
         input = self.input_norm(x)
-
+        #print('input', input.shape)
+        
         enc1_1 = self.encoder1_1(input)
         enc2_1 = self.encoder2_1(input)
         enc12_1 = self.activation(self.BN1(enc1_1+enc2_1))

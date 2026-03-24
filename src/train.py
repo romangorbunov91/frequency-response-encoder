@@ -152,7 +152,7 @@ class ModelTrainer(MetricsHistory):
     def init_model(self):
         """Initialize model and other data for procedure"""
         
-        self.loss_func = CombinedLoss(bce_weight=1.0, dice_weight=0.0).to(self.device)
+        self.loss_func = CombinedLoss(bce_weight=0.5, dice_weight=0.5).to(self.device)
         
         mdl_input_size = self.configer.model_config['input_size']
 
