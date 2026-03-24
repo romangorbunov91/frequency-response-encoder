@@ -21,6 +21,7 @@ def set_seed(seed: int) -> None:
         torch.backends.cudnn.benchmark = False
 
 def build_output_dict(
+    run_id: str,
     configer: Any,
     train_history: Dict[str, List[float]],
     train_size: int,
@@ -31,7 +32,7 @@ def build_output_dict(
 
     # Build metadata generically.
     metadata = {
-        "run_id": datetime.now().strftime("%Y%m%d_%H%M%S"),
+        "run_id": run_id,
         "model": {
             "name": configer.model_config["model_name"],
             "input_size": configer.model_config["input_size"],
@@ -130,6 +131,7 @@ if __name__ == "__main__":
     set_seed(configer.general_config['seed'])
 
     configer.device = configer.general_config.get("device").lower() if torch.cuda.is_available() else 'cpu'
+    configer.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     model_name = configer.model_config['model_name']
     if model_name == "base-model":
@@ -147,12 +149,13 @@ if __name__ == "__main__":
     logs_dir.mkdir(parents=True, exist_ok=True)
     
     output_dict = build_output_dict(
-        configer = configer,
-        train_history = train_history,
-        train_size = train_size,
-        val_size = val_size,
-        test_size = test_size,
-        model_param_count = model_param_count)
+        run_id=configer.run_id,
+        configer=configer,
+        train_history=train_history,
+        train_size=train_size,
+        val_size=val_size,
+        test_size=test_size,
+        model_param_count=model_param_count)
     
     with open(logs_dir / (configer.output_file_name + '.json'), "w") as f:
         json.dump(output_dict, f, indent=4)

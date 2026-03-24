@@ -8,6 +8,7 @@ import torch.nn as nn
 
 # Import Utils.
 from utils.metrics import AverageMeter, CombinedLoss, dice_coefficient, iou_score, pixel_accuracy
+from utils.debug_functions import visualize_predictions
 
 # Import Datasets.
 from torch.utils.data import DataLoader
@@ -323,10 +324,33 @@ class ModelTrainer(MetricsHistory):
                     iou = iou_score(outputs.detach(), masks.detach()),
                     accuracy = pixel_accuracy(outputs.detach(), masks.detach()))
         
-        rand_int = torch.randint(0, len(self.test_loader), (1,)).item()
+        # START debug section.
+        num_samples = 4
+        batch_size = outputs.shape[0]
+        random_indices = torch.randperm(batch_size)[:num_samples]
+        
+        rand_int = random_indices[0]
         print('Prediction:', ((torch.sigmoid(outputs[rand_int]) > 0.5).float()).sum(dim=1).detach())
         print('Ground:', masks[rand_int].sum(dim=1).detach())
-
+        
+        
+        outputs = outputs[random_indices]
+        masks = masks[random_indices]
+        
+        save_dir = Path(self.configer.general_config['score_dir']) / f"{self.configer.model_config['model_name']}_{self.configer.run_id}"
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir, exist_ok=True)
+            
+        visualize_predictions(
+            logits_all=outputs.detach(),
+            masks_all=masks.detach(),
+            dice_func=dice_coefficient,
+            iou_func=iou_score,
+            save_path=save_dir / f"{self.configer.model_config['model_name']}_{self.configer.run_id}_{self.epoch}.pdf",
+            threshold=0.5
+            )
+        # END debug section.
+        
     def train(self):
         
         for n in range(self.configer['epochs']):

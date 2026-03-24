@@ -2,6 +2,7 @@
   "data_dir": "./datasets/",
   "checkpoints_dir": "./checkpoints/",
   "logs_dir": "./train_logs/",
+  "score_dir": "./scores/",
   "device": "cuda",
   "seed": 1991
 }
