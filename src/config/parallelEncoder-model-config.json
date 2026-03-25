@@ -2,7 +2,7 @@
   "model_name": "parallelEncoder-model",
   "dataset_name": "zeros-poles-dataset",
   "feature_list": [32, 128, 512],
-  "mask_halfwindow": 8,
+  "mask_halfwindow": 16,
   "checkpoints_save_policy": "best",
   "checkpoints_metric": "dice",
   "early_stop_number": 50,
