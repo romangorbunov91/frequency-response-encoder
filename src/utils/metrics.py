@@ -36,7 +36,7 @@ class DiceLoss(nn.Module):
         intersection = (predictions * targets).sum(dim=2)
         union = predictions.sum(dim=2) + targets.sum(dim=2)
         
-        dice = (2. * intersection + self.eps) / (union + self.eps)
+        dice = (2. * intersection) / (union + self.eps)
         
         # Dice loss.
         return 1.0 - dice.mean()
@@ -66,7 +66,7 @@ def dice_coefficient(logits, targets, threshold=0.5, eps=1e-6):
     intersection = (predictions * targets).sum(dim=2)
     union = predictions.sum(dim=2) + targets.sum(dim=2)
     
-    dice = (2. * intersection + eps) / (union + eps)
+    dice = (2. * intersection) / (union + eps)
     
     return dice.mean().item()
 
@@ -80,7 +80,7 @@ def iou_score(logits, targets, threshold=0.5, eps=1e-6):
     intersection = (predictions * targets).sum(dim=2)
     union = predictions.sum(dim=2) + targets.sum(dim=2)
     
-    iou = (intersection + eps) / (union - intersection + eps)
+    iou = intersection / (union - intersection + eps)
     
     return iou.mean().item()
 
