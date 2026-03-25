@@ -3,14 +3,14 @@ import torch.nn as nn
 from typing import List, Tuple, Optional
 from typing_extensions import Self
 
-class _base_model(nn.Module):
+class _parallelEncoder_model(nn.Module):
 
     def __init__(self,
                 in_channels: int,
                 out_channels: int,
                 features: List[int]
                 ):
-        super(_base_model, self).__init__()
+        super(_parallelEncoder_model, self).__init__()
 
         self.input_norm = nn.InstanceNorm1d(
             num_features=in_channels, 
@@ -268,12 +268,12 @@ class _base_model(nn.Module):
 
         return out
 
-def base_model(
+def parallelEncoder_model(
     in_channels: int,
     out_channels: int,
     features: List[int]
     ):
-    return _base_model(
+    return _parallelEncoder_model(
         in_channels = in_channels,
         out_channels = out_channels,
         features = features

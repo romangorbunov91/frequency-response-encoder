@@ -16,7 +16,8 @@ from dataloaders.ZerosPolesDataset import TransformsConfig, ZerosPolesDataset
 
 # Import Model.
 from models.model_utilizer import load_net, update_optimizer, ModelUtilizer
-from models.base_model import base_model
+from models.parallelEncoder_model import parallelEncoder_model
+from models.hugeKernelEncoder_model import hugeKernelEncoder_model
 
 # Setting seeds.
 def worker_init_fn(worker_id):
@@ -143,7 +144,12 @@ class ModelTrainer(MetricsHistory):
         
         self.val_transforms = None
         self.test_transforms = None
-            
+
+        if self.configer.model_config["model_name"] == 'parallelEncoder-model':
+            self.model_type = parallelEncoder_model
+        elif self.configer.model_config["model_name"] == 'hugeKernelEncoder-model':
+            self.model_type = hugeKernelEncoder_model
+        
         self.initialize_metrics(
             ['loss', 'dice', 'iou', 'accuracy'],
             ['train', 'val', 'test']
@@ -156,7 +162,7 @@ class ModelTrainer(MetricsHistory):
         
         mdl_input_size = self.configer.model_config['input_size']
 
-        self.net = base_model(
+        self.net = self.model_type(
             in_channels = mdl_input_size[0],
             out_channels = 4,
             features = self.configer.model_config['feature_list']

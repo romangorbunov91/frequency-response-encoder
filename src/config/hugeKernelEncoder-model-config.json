@@ -1,7 +1,7 @@
 {
-  "model_name": "base-model",
+  "model_name": "hugeKernelEncoder-model",
   "dataset_name": "zeros-poles-dataset",
-  "feature_list": [32, 128, 512],
+  "feature_list": [32],
   "mask_halfwindow": 8,
   "checkpoints_save_policy": "best",
   "checkpoints_metric": "dice",
