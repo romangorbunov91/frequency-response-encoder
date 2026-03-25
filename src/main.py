@@ -54,7 +54,7 @@ def build_output_dict(
     }
 
     # Add model-specific details.
-    if metadata['model']['name'] == "base-model":
+    if (model_name == "parallelEncoder-model") | (model_name == "hugeKernelEncoder-model"):
         metadata['model'].update({
             "feature_list": configer.model_config["feature_list"]
         })
