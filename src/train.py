@@ -158,7 +158,7 @@ class ModelTrainer(MetricsHistory):
     def init_model(self):
         """Initialize model and other data for procedure"""
         
-        self.loss_func = CombinedLoss(bce_weight=0.5, dice_weight=0.5).to(self.device)
+        self.loss_func = CombinedLoss(bce_weight=0.01, dice_weight=0.99).to(self.device)
         
         mdl_input_size = self.configer.model_config['input_size']
 
@@ -338,7 +338,6 @@ class ModelTrainer(MetricsHistory):
         rand_int = random_indices[0]
         print('Prediction:', ((torch.sigmoid(outputs[rand_int]) > 0.5).float()).sum(dim=1).detach())
         print('Ground:', masks[rand_int].sum(dim=1).detach())
-        
         
         outputs = outputs[random_indices]
         masks = masks[random_indices]
