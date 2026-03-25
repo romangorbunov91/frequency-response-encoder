@@ -30,7 +30,7 @@ def visualize_predictions(
     COLOR_TRUE_ONLY = np.array([0.80, 0.33, 0.20])
     COLOR_PRED_ONLY = np.array([0.35, 0.35, 0.35])
     
-    for idx, masks, predictions, logits in zip(range(num_samples), masks_all, predictions_all, logits_all):
+    for idx, masks, predictions, logits in zip(range(num_samples), masks_all, predictions_all, logits_all.cpu()):
         mask_true = np.asarray(masks, dtype=bool)
         mask_pred = np.asarray(predictions, dtype=bool)
         
