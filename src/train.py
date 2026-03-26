@@ -158,7 +158,7 @@ class ModelTrainer(MetricsHistory):
     def init_model(self):
         """Initialize model and other data for procedure"""
         
-        self.loss_func = CombinedLoss(bce_weight=0.01, dice_weight=0.99).to(self.device)
+        self.loss_func = CombinedLoss(bce_weight=0.0, dice_weight=1.0).to(self.device)
         
         mdl_input_size = self.configer.model_config['input_size']
 
@@ -266,7 +266,7 @@ class ModelTrainer(MetricsHistory):
             self.optimizer.zero_grad()
             loss = self.loss_func(outputs, masks)
             loss.backward()
-            #nn.utils.clip_grad_norm_(self.net.parameters(), max_norm=1)
+            nn.utils.clip_grad_norm_(self.net.parameters(), max_norm=1)
             self.optimizer.step()
 
             self.update_metrics(
