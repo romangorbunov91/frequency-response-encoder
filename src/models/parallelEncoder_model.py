@@ -65,7 +65,8 @@ class EncoderCh(nn.Module):
         
             self.batchNorm.append(nn.BatchNorm1d(num_features=feature))
         self.activation = nn.ReLU(inplace=True)
-        
+        #self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
+
     def forward(self, x):
         outputs = []
         for block, BN in zip(self.block_sequence, self.batchNorm):
