@@ -37,6 +37,7 @@ def build_output_dict(
             "name": configer.model_config["model_name"],
             "input_size": configer.model_config["input_size"],
             "mask_halfwindow": configer.model_config["mask_halfwindow"],
+            "mask_threshold": configer.model_config["mask_threshold"],
             "param_count": model_param_count,
         },
         "dataset": {
@@ -54,7 +55,7 @@ def build_output_dict(
     }
 
     # Add model-specific details.
-    if (model_name == "parallelEncoder-model") | (model_name == "hugeKernelEncoder-model"):
+    if (model_name == "parallelEncoder-model") | (model_name == "hugeKernelEncoder-model")| (model_name == "deepEncoder-model"):
         metadata['model'].update({
             "feature_list": configer.model_config["feature_list"]
         })
@@ -134,7 +135,7 @@ if __name__ == "__main__":
     configer.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     model_name = configer.model_config['model_name']
-    if (model_name == "parallelEncoder-model") | (model_name == "hugeKernelEncoder-model"):
+    if (model_name == "parallelEncoder-model") | (model_name == "hugeKernelEncoder-model")| (model_name == "deepEncoder-model"):
         trainer = ModelTrainer(configer)
         configer.output_file_name = (
             f"{str(model_name)}"

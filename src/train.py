@@ -18,6 +18,7 @@ from dataloaders.ZerosPolesDataset import TransformsConfig, ZerosPolesDataset
 from models.model_utilizer import load_net, update_optimizer, ModelUtilizer
 from models.parallelEncoder_model import parallelEncoder_model
 from models.hugeKernelEncoder_model import hugeKernelEncoder_model
+from models.deepEncoder_model import deepEncoder_model
 
 # Setting seeds.
 def worker_init_fn(worker_id):
@@ -133,6 +134,8 @@ class ModelTrainer(MetricsHistory):
         self.scheduler = None
         self.loss = None
         
+        self.mask_threshold = self.configer.model_config["mask_threshold"]
+
         # Augmentation.
         self.train_transforms = TransformsConfig(
             #crop_ratio=[0.8, 1.0],
@@ -149,7 +152,9 @@ class ModelTrainer(MetricsHistory):
             self.model_type = parallelEncoder_model
         elif self.configer.model_config["model_name"] == 'hugeKernelEncoder-model':
             self.model_type = hugeKernelEncoder_model
-        
+        elif self.configer.model_config["model_name"] == 'deepEncoder-model':
+            self.model_type = deepEncoder_model
+
         self.initialize_metrics(
             ['loss', 'dice', 'iou', 'accuracy'],
             ['train', 'val', 'test']
@@ -158,7 +163,7 @@ class ModelTrainer(MetricsHistory):
     def init_model(self):
         """Initialize model and other data for procedure"""
         
-        self.loss_func = CombinedLoss(bce_weight=0.0, dice_weight=1.0).to(self.device)
+        self.loss_func = CombinedLoss(bce_weight=0.25, dice_weight=0.75).to(self.device)
         
         mdl_input_size = self.configer.model_config['input_size']
 
@@ -273,9 +278,10 @@ class ModelTrainer(MetricsHistory):
                 split = "train",
                 batch_size = inputs.size(0),
                 loss = loss.item(),
-                dice = dice_coefficient(outputs.detach(), masks.detach()),
-                iou = iou_score(outputs.detach(), masks.detach()),
-                accuracy = pixel_accuracy(outputs.detach(), masks.detach()))
+                dice = dice_coefficient(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
+                iou = iou_score(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
+                accuracy = pixel_accuracy(outputs.detach(), masks.detach(), threshold=self.mask_threshold)
+                )
         
     def __val(self):
         """Validation function."""
@@ -294,9 +300,10 @@ class ModelTrainer(MetricsHistory):
                     split = "val",
                     batch_size = inputs.size(0),
                     loss = loss.item(),
-                    dice = dice_coefficient(outputs.detach(), masks.detach()),
-                    iou = iou_score(outputs.detach(), masks.detach()),
-                    accuracy = pixel_accuracy(outputs.detach(), masks.detach()))
+                    dice = dice_coefficient(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
+                    iou = iou_score(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
+                    accuracy = pixel_accuracy(outputs.detach(), masks.detach(), threshold=self.mask_threshold)
+                    )
         
         ret = self.model_utility.save(
             self.metrics[self.configer.model_config["checkpoints_metric"]]["val"].avg,
@@ -326,9 +333,10 @@ class ModelTrainer(MetricsHistory):
                     split = "test",
                     batch_size = inputs.size(0),
                     loss = loss.item(),
-                    dice = dice_coefficient(outputs.detach(), masks.detach()),
-                    iou = iou_score(outputs.detach(), masks.detach()),
-                    accuracy = pixel_accuracy(outputs.detach(), masks.detach()))
+                    dice = dice_coefficient(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
+                    iou = iou_score(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
+                    accuracy = pixel_accuracy(outputs.detach(), masks.detach(), threshold=self.mask_threshold)
+                    )
         
         # START debug section.
         num_samples = 4
@@ -336,7 +344,7 @@ class ModelTrainer(MetricsHistory):
         random_indices = torch.randperm(batch_size)[:num_samples]
         
         rand_int = random_indices[0]
-        print('Prediction:', ((torch.sigmoid(outputs[rand_int]) > 0.5).float()).sum(dim=1).detach())
+        print('Prediction:', ((torch.sigmoid(outputs[rand_int]) > self.mask_threshold).float()).sum(dim=1).detach())
         print('Ground:', masks[rand_int].sum(dim=1).detach())
         
         outputs = outputs[random_indices]
@@ -352,7 +360,7 @@ class ModelTrainer(MetricsHistory):
             dice_func=dice_coefficient,
             iou_func=iou_score,
             save_path=save_dir / f"{self.configer.model_config['model_name']}_{self.configer.run_id}_{self.epoch}.pdf",
-            threshold=0.5
+            threshold=self.mask_threshold
             )
         # END debug section.
         
