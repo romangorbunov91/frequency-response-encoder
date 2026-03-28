@@ -68,6 +68,16 @@ class ZerosPolesDataset(Dataset):
     def __len__(self) -> int:
         return len(self.samples)
 
+    def _apply_data_transform(self, data_tensor: torch.Tensor, eps: float=1e-12) -> torch.Tensor:
+
+        min_abs = torch.min(data_tensor)
+        max_abs = torch.max(data_tensor)
+        
+        range_abs = torch.clamp(max_abs - min_abs, min=eps)
+        data_scaled = 1.0 + (data_tensor - min_abs) / range_abs
+        
+        return torch.log10(data_scaled) 
+    
     def _augmentations_(self, data_tensor, masks_tensor):
         
         crop_ratio = self.transforms.crop_ratio
@@ -173,4 +183,4 @@ class ZerosPolesDataset(Dataset):
             freq_tensor = data_tensor[0 ,:]
             data_tensor = data_tensor[1:,:]
 
-        return data_tensor, masks_tensor, freq_tensor
+        return data_tensor, masks_tensor, freq_tensor, self._apply_data_transform(data_tensor)
