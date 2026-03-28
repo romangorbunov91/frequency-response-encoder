@@ -70,9 +70,7 @@ class _hugeKernelEncoder_model(nn.Module):
                 out_channels=out_channels,
                 kernel_size=3,
                 padding=1
-            ),
-            nn.BatchNorm1d(num_features=out_channels),
-            nn.ReLU(inplace=True),
+            )
         )
         
         print(f"Encoder features by level: {features}")
