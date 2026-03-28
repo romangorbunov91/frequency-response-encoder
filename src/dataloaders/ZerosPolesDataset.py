@@ -183,4 +183,4 @@ class ZerosPolesDataset(Dataset):
             freq_tensor = data_tensor[0 ,:]
             data_tensor = data_tensor[1:,:]
 
-        return data_tensor, masks_tensor, freq_tensor, self._apply_data_transform(data_tensor)
+        return self._apply_data_transform(data_tensor), masks_tensor, freq_tensor
