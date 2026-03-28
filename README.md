@@ -3,6 +3,7 @@
 ```
 python src\main.py --hypes src\config\parallelEncoder-model-config.json
 python src\main.py --hypes src\config\deepEncoder-model-config.json
+python src\main.py --hypes src\config\hugeKernelEncoder-model-config.json
 ```
 
 When "Shape" matters more than Amplitude: (e.g., detecting a spike pattern regardless of how loud it is)

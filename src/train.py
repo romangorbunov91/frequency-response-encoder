@@ -266,10 +266,13 @@ class ModelTrainer(MetricsHistory):
 
             inputs, masks = data_tuple[0].to(self.device), data_tuple[1].to(self.device)
             
-            outputs = self.net(inputs)
+            logits = self.net(inputs)
 
             self.optimizer.zero_grad()
-            loss = self.loss_func(outputs, masks)
+            loss = self.loss_func(
+                logits=logits, 
+                targets=masks
+                )
             loss.backward()
             nn.utils.clip_grad_norm_(self.net.parameters(), max_norm=1)
             self.optimizer.step()
@@ -278,9 +281,21 @@ class ModelTrainer(MetricsHistory):
                 split = "train",
                 batch_size = inputs.size(0),
                 loss = loss.item(),
-                dice = dice_coefficient(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
-                iou = iou_score(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
-                accuracy = pixel_accuracy(outputs.detach(), masks.detach(), threshold=self.mask_threshold)
+                dice = dice_coefficient(
+                    logits=logits.detach(),
+                    targets=masks.detach(),
+                    threshold=self.mask_threshold
+                    ),
+                iou = iou_score(
+                    logits=logits.detach(),
+                    targets=masks.detach(),
+                    threshold=self.mask_threshold
+                    ),
+                accuracy = pixel_accuracy(
+                    logits=logits.detach(),
+                    targets=masks.detach(),
+                    threshold=self.mask_threshold
+                    )
                 )
         
     def __val(self):
@@ -292,18 +307,33 @@ class ModelTrainer(MetricsHistory):
                 
                 inputs, masks = data_tuple[0].to(self.device), data_tuple[1].to(self.device)
                 
-                outputs = self.net(inputs)
+                logits = self.net(inputs)
                 
-                loss = self.loss_func(outputs, masks)
+                loss = self.loss_func(
+                    logits=logits, 
+                    targets=masks
+                    )
 
                 self.update_metrics(
                     split = "val",
                     batch_size = inputs.size(0),
                     loss = loss.item(),
-                    dice = dice_coefficient(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
-                    iou = iou_score(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
-                    accuracy = pixel_accuracy(outputs.detach(), masks.detach(), threshold=self.mask_threshold)
-                    )
+                    dice = dice_coefficient(
+                        logits=logits.detach(),
+                        targets=masks.detach(),
+                        threshold=self.mask_threshold
+                        ),
+                    iou = iou_score(
+                        logits=logits.detach(),
+                        targets=masks.detach(),
+                        threshold=self.mask_threshold
+                        ),
+                    accuracy = pixel_accuracy(
+                        logits=logits.detach(),
+                        targets=masks.detach(),
+                        threshold=self.mask_threshold
+                        )
+                )
         
         ret = self.model_utility.save(
             self.metrics[self.configer.model_config["checkpoints_metric"]]["val"].avg,
@@ -325,29 +355,44 @@ class ModelTrainer(MetricsHistory):
                 
                 inputs, masks = data_tuple[0].to(self.device), data_tuple[1].to(self.device)
                 
-                outputs = self.net(inputs)
+                logits = self.net(inputs)
                 
-                loss = self.loss_func(outputs, masks)
+                loss = self.loss_func(
+                    logits=logits, 
+                    targets=masks
+                    )
 
                 self.update_metrics(
                     split = "test",
                     batch_size = inputs.size(0),
                     loss = loss.item(),
-                    dice = dice_coefficient(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
-                    iou = iou_score(outputs.detach(), masks.detach(), threshold=self.mask_threshold),
-                    accuracy = pixel_accuracy(outputs.detach(), masks.detach(), threshold=self.mask_threshold)
+                    dice = dice_coefficient(
+                        logits=logits.detach(),
+                        targets=masks.detach(),
+                        threshold=self.mask_threshold
+                        ),
+                    iou = iou_score(
+                        logits=logits.detach(),
+                        targets=masks.detach(),
+                        threshold=self.mask_threshold
+                        ),
+                    accuracy = pixel_accuracy(
+                        logits=logits.detach(),
+                        targets=masks.detach(),
+                        threshold=self.mask_threshold
+                        )
                     )
         
         # START debug section.
         num_samples = 4
-        batch_size = outputs.shape[0]
+        batch_size = logits.shape[0]
         random_indices = torch.randperm(batch_size)[:num_samples]
         
         rand_int = random_indices[0]
-        print('Prediction:', ((torch.sigmoid(outputs[rand_int]) > self.mask_threshold).float()).sum(dim=1).detach())
+        print('Prediction:', ((torch.sigmoid(logits[rand_int]) > self.mask_threshold).float()).sum(dim=1).detach())
         print('Ground:', masks[rand_int].sum(dim=1).detach())
         
-        outputs = outputs[random_indices]
+        logits = logits[random_indices]
         masks = masks[random_indices]
         
         save_dir = Path(self.configer.general_config['score_dir']) / f"{self.configer.model_config['model_name']}_{self.configer.run_id}"
@@ -355,7 +400,7 @@ class ModelTrainer(MetricsHistory):
             os.makedirs(save_dir, exist_ok=True)
             
         visualize_predictions(
-            logits_all=outputs.detach(),
+            logits_all=logits.detach(),
             masks_all=masks.detach(),
             dice_func=dice_coefficient,
             iou_func=iou_score,
