@@ -211,8 +211,7 @@ class _parallelEncoder_model(nn.Module):
     
     def forward(self, x):
         
-        x_input = torch.log1p(x - x.min() + 1)
-        x_input = self.input_norm(x_input)
+        x_input = self.input_norm(x)
         #print('input', input.shape)
         
         enc1_out = self.encoder1(x_input)
@@ -220,7 +219,8 @@ class _parallelEncoder_model(nn.Module):
         
         enc_sum = []
         for enc1, enc2, BN in zip(enc1_out, enc2_out, self.batchNorm):
-            enc_sum.append(self.activation(BN(enc1+enc2)))
+            #enc_sum.append(self.activation(BN(enc1+enc2)))
+            enc_sum.append(BN(enc1+enc2))
             #print('enc_sum', enc_sum[-1].shape)
 
         enc_out = self.bottleneck(
