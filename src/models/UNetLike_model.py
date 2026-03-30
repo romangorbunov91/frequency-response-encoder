@@ -90,6 +90,8 @@ class _UNetLike_model(nn.Module):
         
         print(f"Encoder features by level: {features}")
         
+        self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
+
         self.encoder = EncoderCh(
             in_channels=in_channels,
             features=features,
@@ -99,12 +101,12 @@ class _UNetLike_model(nn.Module):
         )        
       
         self.bottleneck = DoubleConv(
-                    in_channels=features[-1],
-                    out_channels=2*features[-1],
-                    kernel_size=3,
-                    stride=1,
-                    padding=1
-                )
+            in_channels=features[-1],
+            out_channels=2*features[-1],
+            kernel_size=3,
+            stride=1,
+            padding=1
+        )
        
         features = features[::-1]
         prev_channels = 2*features[0]
@@ -161,8 +163,9 @@ class _UNetLike_model(nn.Module):
         # Reverse order.
         enc_outputs = enc_outputs[::-1]
         
-        dec_out = self.bottleneck(enc_outputs[0])
+        dec_out = self.bottleneck(self.pool(enc_outputs[0]))
         #print('dec_out', dec_out.shape)
+        
         for dec_layer, up_layer, enc_out_item in zip(self.decoder, self.upsample, enc_outputs):
             dec_out = dec_layer(torch.cat([up_layer(dec_out), enc_out_item], dim=1))
             #print('dec_out', dec_out.shape)
