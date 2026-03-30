@@ -19,6 +19,7 @@ from models.model_utilizer import load_net, update_optimizer, ModelUtilizer
 from models.parallelEncoder_model import parallelEncoder_model
 from models.hugeKernelEncoder_model import hugeKernelEncoder_model
 from models.deepEncoder_model import deepEncoder_model
+from models.UNetLike_model import UNetLike_model
 
 # Setting seeds.
 def worker_init_fn(worker_id):
@@ -154,6 +155,8 @@ class ModelTrainer(MetricsHistory):
             self.model_type = hugeKernelEncoder_model
         elif self.configer.model_config["model_name"] == 'deepEncoder-model':
             self.model_type = deepEncoder_model
+        elif self.configer.model_config["model_name"] == 'UNetLike-model':
+            self.model_type = UNetLike_model
 
         self.initialize_metrics(
             ['loss', 'dice', 'iou', 'accuracy'],

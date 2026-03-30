@@ -1,10 +1,18 @@
 # Энкодер
 
 ```
+python src\main.py --hypes src\config\UNetLike-model-config.json
 python src\main.py --hypes src\config\parallelEncoder-model-config.json
 python src\main.py --hypes src\config\deepEncoder-model-config.json
 python src\main.py --hypes src\config\hugeKernelEncoder-model-config.json
 ```
+
+## Cracks
+https://arxiv.org/html/2403.17725
+https://arxiv.org/html/2411.04620
+https://www.sciencedirect.com/science/article/abs/pii/S1474034625001429
+https://www.sciencedirect.com/science/article/pii/S0950061825021129
+
 
 When "Shape" matters more than Amplitude: (e.g., detecting a spike pattern regardless of how loud it is)
 InstanceNorm is actually a great choice. It will make the model invariant to signal strength, focusing only on the morphology of the wave.
@@ -76,3 +84,59 @@ project/
 - `time_delay`: `List[float]` - сдвиг/задержка по времени; выбирается случайным образом из диапазона `[min, max]>=0.0`. **Отключить: `time_delay=[0.0, 0.0]`**.
 - `noise_level`: `List[float]` - масштабирующй коэффициент шума; выбирается случайным образом из диапазона `[min, max]>=0.0`. Генерируемый шум сглаживается экспоненциально с коэффициентом `noise_filter`: `float`от 0.1 до 1.0. **Отключить: `noise_level=[0.0, 0.0]`**.
 - `gain`: `List[float]` - масштабирующий коэффициент; выбирается случайным образом из диапазона `[min, max]`. Допустимо включать в диапазон положительные/отрицательные числа. **Отключить: `gain=[1.0, 1.0]`**.
+
+
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class DoubleConv(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        super().__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_ch, out_ch, 3, padding=1),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_ch, out_ch, 3, padding=1),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True)
+        )
+    def forward(self, x): return self.conv(x)
+
+class UNetInstance(nn.Module):
+    def __init__(self, in_channels=3, num_classes=3):
+        super().__init__()
+        self.enc1 = DoubleConv(in_channels, 64)
+        self.enc2 = DoubleConv(64, 128)
+        self.enc3 = DoubleConv(128, 256)
+        self.enc4 = DoubleConv(256, 512)
+        self.bottleneck = DoubleConv(512, 1024)
+
+        self.up4 = nn.ConvTranspose2d(1024, 512, 2, stride=2)
+        self.dec4 = DoubleConv(1024, 512)
+        self.up3 = nn.ConvTranspose2d(512, 256, 2, stride=2)
+        self.dec3 = DoubleConv(512, 256)
+        self.up2 = nn.ConvTranspose2d(256, 128, 2, stride=2)
+        self.dec2 = DoubleConv(256, 128)
+        self.up1 = nn.ConvTranspose2d(128, 64, 2, stride=2)
+        self.dec1 = DoubleConv(128, 64)
+
+        self.final_conv = nn.Conv2d(64, num_classes, 1)
+        self.pool = nn.MaxPool2d(2)
+
+    def forward(self, x):
+        # Encoder
+        e1 = self.enc1(x)
+        e2 = self.enc2(self.pool(e1))
+        e3 = self.enc3(self.pool(e2))
+        e4 = self.enc4(self.pool(e3))
+        b = self.bottleneck(self.pool(e4))
+
+        # Decoder
+        d4 = self.dec4(torch.cat([self.up4(b), e4], 1))
+        d3 = self.dec3(torch.cat([self.up3(d4), e3], 1))
+        d2 = self.dec2(torch.cat([self.up2(d3), e2], 1))
+        d1 = self.dec1(torch.cat([self.up1(d2), e1], 1))
+
+        return self.final_conv(d1)
