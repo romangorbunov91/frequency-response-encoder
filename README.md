@@ -95,11 +95,11 @@ class DoubleConv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super().__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(in_ch, out_ch, 3, padding=1),
-            nn.BatchNorm2d(out_ch),
+            nn.Conv1d(in_ch, out_ch, 3, padding=1),
+            nn.BatchNorm1d(out_ch),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_ch, out_ch, 3, padding=1),
-            nn.BatchNorm2d(out_ch),
+            nn.Conv1d(out_ch, out_ch, 3, padding=1),
+            nn.BatchNorm1d(out_ch),
             nn.ReLU(inplace=True)
         )
     def forward(self, x): return self.conv(x)
@@ -113,17 +113,17 @@ class UNetInstance(nn.Module):
         self.enc4 = DoubleConv(256, 512)
         self.bottleneck = DoubleConv(512, 1024)
 
-        self.up4 = nn.ConvTranspose2d(1024, 512, 2, stride=2)
+        self.up4 = nn.ConvTranspose1d(1024, 512, 2, stride=2)
         self.dec4 = DoubleConv(1024, 512)
-        self.up3 = nn.ConvTranspose2d(512, 256, 2, stride=2)
+        self.up3 = nn.ConvTranspose1d(512, 256, 2, stride=2)
         self.dec3 = DoubleConv(512, 256)
-        self.up2 = nn.ConvTranspose2d(256, 128, 2, stride=2)
+        self.up2 = nn.ConvTranspose1d(256, 128, 2, stride=2)
         self.dec2 = DoubleConv(256, 128)
-        self.up1 = nn.ConvTranspose2d(128, 64, 2, stride=2)
+        self.up1 = nn.ConvTranspose1d(128, 64, 2, stride=2)
         self.dec1 = DoubleConv(128, 64)
 
-        self.final_conv = nn.Conv2d(64, num_classes, 1)
-        self.pool = nn.MaxPool2d(2)
+        self.final_conv = nn.Conv1d(64, num_classes, 1)
+        self.pool = nn.MaxPool1d(2)
 
     def forward(self, x):
         # Encoder
