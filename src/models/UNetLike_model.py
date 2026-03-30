@@ -155,17 +155,17 @@ class _UNetLike_model(nn.Module):
     
     def forward(self, x):
         
-        #x_input = self.input_norm(x)
+        x_input = self.input_norm(x)
         #print('input', input.shape)
         
-        enc_outputs = self.encoder(x)
+        enc_outputs = self.encoder(x_input)
         
         # Reverse order.
         enc_outputs = enc_outputs[::-1]
         
         dec_out = self.bottleneck(self.pool(enc_outputs[0]))
         #print('dec_out', dec_out.shape)
-        
+
         for dec_layer, up_layer, enc_out_item in zip(self.decoder, self.upsample, enc_outputs):
             dec_out = dec_layer(torch.cat([up_layer(dec_out), enc_out_item], dim=1))
             #print('dec_out', dec_out.shape)
