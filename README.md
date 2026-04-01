@@ -8,7 +8,7 @@ python src\main.py --hypes src\config\hugeKernelEncoder-model-config.json
 ```
 
 ## Cracks
-https://arxiv.org/html/2403.17725
+[x] https://arxiv.org/html/2403.17725
 https://arxiv.org/html/2411.04620
 https://www.sciencedirect.com/science/article/abs/pii/S1474034625001429
 https://www.sciencedirect.com/science/article/pii/S0950061825021129
