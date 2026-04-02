@@ -21,7 +21,9 @@ class DoubleConv(nn.Module):
                 stride=stride,
                 padding=padding
             ),
-            nn.BatchNorm1d(num_features=out_channels),
+            nn.InstanceNorm1d(num_features=out_channels, affine=True),
+            #nn.LeakyReLU(negative_slope=0.01, inplace=True),
+            #nn.BatchNorm1d(num_features=out_channels),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=out_channels,
@@ -30,7 +32,8 @@ class DoubleConv(nn.Module):
                 stride=stride,
                 padding=padding
             ),
-            nn.BatchNorm1d(num_features=out_channels),
+            nn.InstanceNorm1d(num_features=out_channels, affine=True),
+            #nn.BatchNorm1d(num_features=out_channels),
             nn.ReLU(inplace=True)
         )
 
@@ -83,15 +86,23 @@ class _UNetLike_model(nn.Module):
                 ):
         super(_UNetLike_model, self).__init__()
 
+        self.input_conv = nn.Conv1d(
+            in_channels=in_channels,
+            out_channels=features[0],
+            kernel_size=3,
+            stride=1,
+            padding=1
+        )
+        
         self.input_norm = nn.InstanceNorm1d(
-            num_features=in_channels, 
+            num_features=features[0], 
             affine=True  # Allows model to learn optimal scale/shift.
         )
         
         print(f"Encoder features by level: {features}")
         
-        self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
-
+        self.pool = nn.MaxPool1d(kernel_size=2, stride=2)        
+        
         self.encoder = EncoderCh(
             in_channels=in_channels,
             features=features,
@@ -155,10 +166,10 @@ class _UNetLike_model(nn.Module):
     
     def forward(self, x):
         
-        x_input = self.input_norm(x)
+        x_input = self.input_conv(x)
         #print('input', input.shape)
-        
-        enc_outputs = self.encoder(x_input)
+                
+        enc_outputs = self.encoder(self.input_norm(x_input))
         
         # Reverse order.
         enc_outputs = enc_outputs[::-1]

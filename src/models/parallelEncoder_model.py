@@ -21,7 +21,8 @@ class DoubleConv(nn.Module):
                 stride=stride[0],
                 padding=padding[0]
             ),
-            nn.BatchNorm1d(num_features=out_channels[0]),
+            nn.InstanceNorm1d(num_features=out_channels[0], affine=True),
+            #nn.BatchNorm1d(num_features=out_channels[0]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=out_channels[0],
@@ -63,7 +64,9 @@ class EncoderCh(nn.Module):
             )
             prev_channels = feature
         
-            self.batchNorm.append(nn.BatchNorm1d(num_features=feature))
+            #self.batchNorm.append(nn.BatchNorm1d(num_features=feature))
+            self.batchNorm.append(nn.InstanceNorm1d(num_features=feature, affine=True))
+
         self.activation = nn.ReLU(inplace=True)
         #self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
 
@@ -98,7 +101,8 @@ class DecoderTransConv(nn.Module):
                 kernel_size=3,
                 padding=1
             ),
-            nn.BatchNorm1d(num_features=out_channels),
+            nn.InstanceNorm1d(num_features=out_channels, affine=True),
+            #nn.BatchNorm1d(num_features=out_channels),
             nn.ReLU(inplace=True),
             nn.Conv1d(
                 in_channels=out_channels,
@@ -106,7 +110,8 @@ class DecoderTransConv(nn.Module):
                 kernel_size=3,
                 padding=1
             ),
-            nn.BatchNorm1d(num_features=out_channels),
+            nn.InstanceNorm1d(num_features=out_channels, affine=True),
+            #nn.BatchNorm1d(num_features=out_channels),
             nn.ReLU(inplace=True),
         )
 
@@ -152,11 +157,13 @@ class _parallelEncoder_model(nn.Module):
                 stride=2,
                 padding=0
             ),
-            nn.BatchNorm1d(num_features=2*features[-1]),
+            nn.InstanceNorm1d(num_features=2*features[-1], affine=True),
+            #nn.BatchNorm1d(num_features=2*features[-1]),
             nn.ReLU(inplace=True),
         )
 
-        self.batchNorm = nn.ModuleList([nn.BatchNorm1d(num_features=feature) for feature in features])
+        #self.batchNorm = nn.ModuleList([nn.BatchNorm1d(num_features=feature) for feature in features])
+        self.batchNorm = nn.ModuleList([nn.InstanceNorm1d(num_features=feature, affine=True) for feature in features])
 
         features = features[::-1]
         prev_channels = features[0]
@@ -184,7 +191,8 @@ class _parallelEncoder_model(nn.Module):
                     kernel_size=2,
                     stride=2
                     ),
-                nn.BatchNorm1d(num_features=out_channels),
+                nn.InstanceNorm1d(num_features=out_channels, affine=True),
+                #nn.BatchNorm1d(num_features=out_channels),
                 nn.ReLU(inplace=True),
                 nn.Conv1d(
                     in_channels=out_channels,

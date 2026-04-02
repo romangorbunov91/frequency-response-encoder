@@ -70,13 +70,10 @@ class ZerosPolesDataset(Dataset):
 
     def _apply_data_transform(self, data_tensor: torch.Tensor, eps: float=1e-12) -> torch.Tensor:
 
-        min_abs = torch.min(data_tensor)
-        max_abs = torch.max(data_tensor)
-        
-        range_abs = torch.clamp(max_abs - min_abs, min=eps)
-        data_scaled = 1.0 + (data_tensor - min_abs) / range_abs
-        
-        return torch.log10(data_scaled) 
+        l2_norm = torch.sqrt(torch.sum(data_tensor ** 2, dim=0, keepdim=True))
+        data_tensor_normalized = data_tensor / (l2_norm + eps)
+        data_tensor_log = torch.log10(l2_norm) / 2.0
+        return torch.cat([data_tensor_normalized, data_tensor_log], dim=0)
     
     def _augmentations_(self, data_tensor, masks_tensor):
         
