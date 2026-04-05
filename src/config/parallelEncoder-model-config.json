@@ -1,6 +1,7 @@
 {
   "model_name": "parallelEncoder-model",
-  "dataset_name": "zeros-poles-dataset",
+  "dataset_family": "zeros-poles-dataset",
+  "dataset_name": "zeros-poles-dataset_Nzp0",
   "feature_list": [32, 128, 512],
   "mask_halfwindow": 16,
   "mask_threshold": 0.5,

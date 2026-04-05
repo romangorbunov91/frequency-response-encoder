@@ -113,6 +113,7 @@ class ModelTrainer(MetricsHistory):
         self.configer = configer
 
         #: str: Type of dataset.
+        self.dataset_family = self.configer["dataset_family"].lower()
         self.dataset = self.configer["dataset_name"].lower()
         self.dataset_path = Path(self.configer.general_config["data_dir"]) / self.configer["dataset_name"]
         
@@ -216,7 +217,7 @@ class ModelTrainer(MetricsHistory):
         print(f"Model parameters: {self.model_size}")
 
         # Setting Dataloaders.
-        if self.dataset == "zeros-poles-dataset":            
+        if self.dataset_family == "zeros-poles-dataset":
             self.train_loader = DataLoader(
                 ZerosPolesDataset(
                     dataset_dir=self.dataset_path,

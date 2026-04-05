@@ -124,7 +124,7 @@ if __name__ == "__main__":
     with open(model_config_path, "r") as f:
         configer.model_config = json.load(f)
     
-    dataset_config_path = config_dir / f"{configer['dataset_name']}-config.json"
+    dataset_config_path = config_dir / f"{configer['dataset_family']}-config.json"
     assert dataset_config_path.exists(), f"Config not found: {dataset_config_path}"
     with open(dataset_config_path, "r") as f:
         configer.dataset_config = json.load(f)
