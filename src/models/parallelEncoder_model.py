@@ -21,7 +21,7 @@ class DoubleConv(nn.Module):
                 stride=stride[0],
                 padding=padding[0]
             ),
-            nn.InstanceNorm1d(num_features=out_channels[0], affine=True),
+            nn.InstanceNorm1d(num_features=out_channels[0], eps=1e-09, affine=True),
             #nn.BatchNorm1d(num_features=out_channels[0]),
             nn.ReLU(inplace=True),
             nn.Conv1d(
@@ -65,7 +65,7 @@ class EncoderCh(nn.Module):
             prev_channels = feature
         
             #self.batchNorm.append(nn.BatchNorm1d(num_features=feature))
-            self.batchNorm.append(nn.InstanceNorm1d(num_features=feature, affine=True))
+            self.batchNorm.append(nn.InstanceNorm1d(num_features=feature, eps=1e-09, affine=True))
 
         self.activation = nn.ReLU(inplace=True)
         #self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
@@ -101,7 +101,7 @@ class DecoderTransConv(nn.Module):
                 kernel_size=3,
                 padding=1
             ),
-            nn.InstanceNorm1d(num_features=out_channels, affine=True),
+            nn.InstanceNorm1d(num_features=out_channels, eps=1e-09, affine=True),
             #nn.BatchNorm1d(num_features=out_channels),
             nn.ReLU(inplace=True),
             nn.Conv1d(
@@ -110,7 +110,7 @@ class DecoderTransConv(nn.Module):
                 kernel_size=3,
                 padding=1
             ),
-            nn.InstanceNorm1d(num_features=out_channels, affine=True),
+            nn.InstanceNorm1d(num_features=out_channels, eps=1e-09, affine=True),
             #nn.BatchNorm1d(num_features=out_channels),
             nn.ReLU(inplace=True),
         )
@@ -128,10 +128,7 @@ class _parallelEncoder_model(nn.Module):
                 ):
         super(_parallelEncoder_model, self).__init__()
 
-        self.input_norm = nn.InstanceNorm1d(
-            num_features=in_channels, 
-            affine=True  # Allows model to learn optimal scale/shift.
-        )
+        self.input_norm = nn.InstanceNorm1d(num_features=in_channels, eps=1e-09, affine=True)
         
         self.encoder1 = EncoderCh(
             in_channels = in_channels,
@@ -157,13 +154,13 @@ class _parallelEncoder_model(nn.Module):
                 stride=2,
                 padding=0
             ),
-            nn.InstanceNorm1d(num_features=2*features[-1], affine=True),
+            nn.InstanceNorm1d(num_features=2*features[-1], eps=1e-09, affine=True),
             #nn.BatchNorm1d(num_features=2*features[-1]),
             nn.ReLU(inplace=True),
         )
 
         #self.batchNorm = nn.ModuleList([nn.BatchNorm1d(num_features=feature) for feature in features])
-        self.batchNorm = nn.ModuleList([nn.InstanceNorm1d(num_features=feature, affine=True) for feature in features])
+        self.batchNorm = nn.ModuleList([nn.InstanceNorm1d(num_features=feature, eps=1e-09, affine=True) for feature in features])
 
         features = features[::-1]
         prev_channels = features[0]
@@ -191,7 +188,7 @@ class _parallelEncoder_model(nn.Module):
                     kernel_size=2,
                     stride=2
                     ),
-                nn.InstanceNorm1d(num_features=out_channels, affine=True),
+                nn.InstanceNorm1d(num_features=out_channels, eps=1e-09, affine=True),
                 #nn.BatchNorm1d(num_features=out_channels),
                 nn.ReLU(inplace=True),
                 nn.Conv1d(
@@ -213,9 +210,6 @@ class _parallelEncoder_model(nn.Module):
             nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
-        elif isinstance(m, (nn.BatchNorm1d, nn.InstanceNorm1d)):
-            nn.init.constant_(m.weight, 1)
-            nn.init.constant_(m.bias, 0)
     
     def forward(self, x):
         
