@@ -86,7 +86,7 @@ project/
 - `gain`: `List[float]` - масштабирующий коэффициент; выбирается случайным образом из диапазона `[min, max]`. Допустимо включать в диапазон положительные/отрицательные числа. **Отключить: `gain=[1.0, 1.0]`**.
 
 
-
+```
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -140,3 +140,4 @@ class UNetInstance(nn.Module):
         d1 = self.dec1(torch.cat([self.up1(d2), e1], 1))
 
         return self.final_conv(d1)
+```
