@@ -21,10 +21,10 @@ class DoubleConv(nn.Module):
                 stride=stride,
                 padding=padding
             ),
-            nn.InstanceNorm1d(num_features=out_channels, affine=True),
-            #nn.LeakyReLU(negative_slope=0.01, inplace=True),
+            nn.InstanceNorm1d(num_features=out_channels, eps=1e-09, affine=True),
             #nn.BatchNorm1d(num_features=out_channels),
-            nn.ReLU(inplace=True),
+            #nn.LeakyReLU(negative_slope=0.1, inplace=True),
+            nn.SiLU(inplace=True),
             nn.Conv1d(
                 in_channels=out_channels,
                 out_channels=out_channels,
@@ -32,9 +32,10 @@ class DoubleConv(nn.Module):
                 stride=stride,
                 padding=padding
             ),
-            nn.InstanceNorm1d(num_features=out_channels, affine=True),
+            nn.InstanceNorm1d(num_features=out_channels, eps=1e-09, affine=True),
             #nn.BatchNorm1d(num_features=out_channels),
-            nn.ReLU(inplace=True)
+            #nn.LeakyReLU(negative_slope=0.1, inplace=True),
+            nn.SiLU(inplace=True),
         )
 
     def forward(self, x):
@@ -94,17 +95,14 @@ class _UNetLike_model(nn.Module):
             padding=1
         )
         
-        self.input_norm = nn.InstanceNorm1d(
-            num_features=features[0], 
-            affine=True  # Allows model to learn optimal scale/shift.
-        )
+        self.input_norm = nn.InstanceNorm1d(num_features=features[0], eps=1e-09, affine=True)
         
         print(f"Encoder features by level: {features}")
         
         self.pool = nn.MaxPool1d(kernel_size=2, stride=2)        
         
         self.encoder = EncoderCh(
-            in_channels=in_channels,
+            in_channels=features[0],
             features=features,
             kernel_size=3,
             stride=1,
@@ -160,16 +158,13 @@ class _UNetLike_model(nn.Module):
             nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
-        elif isinstance(m, (nn.BatchNorm1d, nn.InstanceNorm1d)):
-            nn.init.constant_(m.weight, 1)
-            nn.init.constant_(m.bias, 0)
     
     def forward(self, x):
         
         x_input = self.input_conv(x)
         #print('input', input.shape)
                 
-        enc_outputs = self.encoder(self.input_norm(x_input))
+        enc_outputs = self.encoder(x_input)
         
         # Reverse order.
         enc_outputs = enc_outputs[::-1]

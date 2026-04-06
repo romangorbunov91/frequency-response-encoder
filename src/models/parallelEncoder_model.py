@@ -23,7 +23,7 @@ class DoubleConv(nn.Module):
             ),
             nn.InstanceNorm1d(num_features=out_channels[0], eps=1e-09, affine=True),
             #nn.BatchNorm1d(num_features=out_channels[0]),
-            nn.ReLU(inplace=True),
+            nn.SiLU(inplace=True),
             nn.Conv1d(
                 in_channels=out_channels[0],
                 out_channels=out_channels[1],
@@ -67,7 +67,7 @@ class EncoderCh(nn.Module):
             #self.batchNorm.append(nn.BatchNorm1d(num_features=feature))
             self.batchNorm.append(nn.InstanceNorm1d(num_features=feature, eps=1e-09, affine=True))
 
-        self.activation = nn.ReLU(inplace=True)
+        self.activation = nn.SiLU(inplace=True)
         #self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
 
     def forward(self, x):
@@ -103,7 +103,7 @@ class DecoderTransConv(nn.Module):
             ),
             nn.InstanceNorm1d(num_features=out_channels, eps=1e-09, affine=True),
             #nn.BatchNorm1d(num_features=out_channels),
-            nn.ReLU(inplace=True),
+            nn.SiLU(inplace=True),
             nn.Conv1d(
                 in_channels=out_channels,
                 out_channels=out_channels,
@@ -112,7 +112,7 @@ class DecoderTransConv(nn.Module):
             ),
             nn.InstanceNorm1d(num_features=out_channels, eps=1e-09, affine=True),
             #nn.BatchNorm1d(num_features=out_channels),
-            nn.ReLU(inplace=True),
+            nn.SiLU(inplace=True),
         )
 
     def forward(self, x):
@@ -130,8 +130,16 @@ class _parallelEncoder_model(nn.Module):
 
         self.input_norm = nn.InstanceNorm1d(num_features=in_channels, eps=1e-09, affine=True)
         
+        self.input_conv = nn.Conv1d(
+            in_channels=in_channels,
+            out_channels=features[0],
+            kernel_size=3,
+            stride=1,
+            padding=1
+        )
+        
         self.encoder1 = EncoderCh(
-            in_channels = in_channels,
+            in_channels = features[0],
             features = features,
             kernel_size = 64,
             stride = 1,
@@ -139,7 +147,7 @@ class _parallelEncoder_model(nn.Module):
         )        
         
         self.encoder2 = EncoderCh(
-            in_channels = in_channels,
+            in_channels = features[0],
             features = features,
             kernel_size = 32,
             stride = 1,
@@ -156,7 +164,7 @@ class _parallelEncoder_model(nn.Module):
             ),
             nn.InstanceNorm1d(num_features=2*features[-1], eps=1e-09, affine=True),
             #nn.BatchNorm1d(num_features=2*features[-1]),
-            nn.ReLU(inplace=True),
+            nn.SiLU(inplace=True),
         )
 
         #self.batchNorm = nn.ModuleList([nn.BatchNorm1d(num_features=feature) for feature in features])
@@ -190,7 +198,7 @@ class _parallelEncoder_model(nn.Module):
                     ),
                 nn.InstanceNorm1d(num_features=out_channels, eps=1e-09, affine=True),
                 #nn.BatchNorm1d(num_features=out_channels),
-                nn.ReLU(inplace=True),
+                nn.SiLU(inplace=True),
                 nn.Conv1d(
                     in_channels=out_channels,
                     out_channels=out_channels,
@@ -200,20 +208,20 @@ class _parallelEncoder_model(nn.Module):
             )
         )
 
-        self.activation = nn.ReLU(inplace=False)
+        self.activation = nn.SiLU(inplace=False)
 
         self.apply(self._init_weights)
         print(f"Encoder features by level: {features}")
         
     def _init_weights(self, m):
         if isinstance(m, (nn.Conv1d, nn.ConvTranspose1d)):
-            nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+            nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='silu')
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
     
     def forward(self, x):
         
-        x_input = self.input_norm(x)
+        x_input = self.input_conv(x)
         #print('input', input.shape)
         
         enc1_out = self.encoder1(x_input)
