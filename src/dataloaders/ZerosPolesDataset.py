@@ -72,8 +72,12 @@ class ZerosPolesDataset(Dataset):
 
         l2_norm = torch.sqrt(torch.sum(data_tensor ** 2, dim=0, keepdim=True))
         data_tensor_normalized = data_tensor / (l2_norm + eps)
+        
+        data_tensor_sign = torch.sign(data_tensor_normalized).to(data_tensor_normalized.dtype)    
+        sign_product = torch.prod(data_tensor_sign, dim=0, keepdim=True)
+        
         data_tensor_log = torch.log10(l2_norm) / 2.0
-        return torch.cat([data_tensor_normalized, data_tensor_log], dim=0)
+        return torch.cat([data_tensor_normalized, data_tensor_log, sign_product], dim=0)
     
     def _augmentations_(self, data_tensor, masks_tensor):
         
