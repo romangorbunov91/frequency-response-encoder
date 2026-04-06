@@ -38,6 +38,8 @@ def build_output_dict(
             "input_size": configer.model_config["input_size"],
             "mask_halfwindow": configer.model_config["mask_halfwindow"],
             "mask_threshold": configer.model_config["mask_threshold"],
+            "bce_weight": configer.model_config["bce_weight"],
+            "dice_weight": configer.model_config["dice_weight"],
             "param_count": model_param_count,
         },
         "dataset": {

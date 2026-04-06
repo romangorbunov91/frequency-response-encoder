@@ -137,14 +137,16 @@ class ModelTrainer(MetricsHistory):
         self.loss = None
         
         self.mask_threshold = self.configer.model_config["mask_threshold"]
+        self.bce_weight = self.configer.model_config["bce_weight"]
+        self.dice_weight = self.configer.model_config["dice_weight"]
 
         # Augmentation.
         self.train_transforms = TransformsConfig(
             #crop_ratio=[0.8, 1.0],
-            time_delay=[0.0, 1e-9],
-            noise_level=[5e-3, 30e-3],
-            noise_reduce=2,
-            #gain=[-1e2, 1e2]
+            #time_delay=[0.0, 1e-9],
+            #noise_level=[5e-3, 30e-3],
+            #noise_reduce=2,
+            gain=[0.9, 1.1]
         )
         
         self.val_transforms = None
@@ -167,7 +169,10 @@ class ModelTrainer(MetricsHistory):
     def init_model(self):
         """Initialize model and other data for procedure"""
         
-        self.loss_func = CombinedLoss(bce_weight=0.25, dice_weight=0.75).to(self.device)
+        self.loss_func = CombinedLoss(
+            bce_weight=self.bce_weight,
+            dice_weight=self.dice_weight
+            ).to(self.device)
         
         mdl_input_size = self.configer.model_config['input_size']
 
