@@ -215,7 +215,7 @@ class _parallelEncoder_model(nn.Module):
         
     def _init_weights(self, m):
         if isinstance(m, (nn.Conv1d, nn.ConvTranspose1d)):
-            nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='silu')
+            nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
     
