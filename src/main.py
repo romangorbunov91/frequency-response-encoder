@@ -57,12 +57,12 @@ def build_output_dict(
     }
 
     # Add model-specific details.
-    if (model_name == "parallelEncoder-model") | (model_name == "hugeKernelEncoder-model") | (model_name == "deepEncoder-model") | (model_name == "UNetLike-model"):
-        metadata['model'].update({
-            "feature_list": configer.model_config["feature_list"]
-        })
-    else:
-        raise NotImplementedError(f"Model not supported: {metadata['model']['name']}")
+    #if (model_name == "parallelEncoder-model") | (model_name == "hugeKernelEncoder-model") | (model_name == "deepEncoder-model") | (model_name == "UNetLike-model"):
+    metadata['model'].update({
+        "feature_list": configer.model_config["feature_list"]
+    })
+    #else:
+    #    raise NotImplementedError(f"Model not supported: {metadata['model']['name']}")
 
     # Build train_log dynamically.
     train_log = []
@@ -137,13 +137,13 @@ if __name__ == "__main__":
     configer.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     model_name = configer.model_config['model_name']
-    if (model_name == "parallelEncoder-model") | (model_name == "hugeKernelEncoder-model") | (model_name == "deepEncoder-model") | (model_name == "UNetLike-model"):
-        trainer = ModelTrainer(configer)
-        configer.output_file_name = (
-            f"{str(model_name)}"
-        )
-    else:
-        raise NotImplementedError(f"Model not supported: {model_name}")
+    #if (model_name == "parallelEncoder-model") | (model_name == "hugeKernelEncoder-model") | (model_name == "deepEncoder-model") | (model_name == "UNetLike-model"):
+    trainer = ModelTrainer(configer)
+    configer.output_file_name = (
+        f"{str(model_name)}"
+    )
+    #else:
+    #    raise NotImplementedError(f"Model not supported: {model_name}")
     
     trainer.init_model()
     train_history, train_size, val_size, test_size, model_param_count = trainer.train()

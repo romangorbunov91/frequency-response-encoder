@@ -1,6 +1,7 @@
 # Энкодер
 
 ```
+python src\main.py --hypes src\config\TransformerBottleneck-model-config.json
 python src\main.py --hypes src\config\UNetLike-model-config.json
 python src\main.py --hypes src\config\parallelEncoder-model-config.json
 python src\main.py --hypes src\config\deepEncoder-model-config.json
