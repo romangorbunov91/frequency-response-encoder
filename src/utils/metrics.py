@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class AverageMeter(object):
     """Average Meter object, contain val, avg, sum and count on concurrent values"""
@@ -49,12 +50,32 @@ class CombinedLoss(nn.Module):
         self.dice_weight = dice_weight
         self.bce = nn.BCEWithLogitsLoss()
         self.dice = DiceLoss()
+        self.ds_weights = [0.4, 0.6, 0.7, 0.8]
     
     def forward(self, logits: torch.Tensor, targets: torch.Tensor):
-        bce_loss = self.bce(logits, targets)
-        dice_loss = self.dice(logits, targets)
         
-        return self.bce_weight * bce_loss + self.dice_weight * dice_loss
+        if isinstance(logits, tuple):
+            main_logits, ds_logits = logits
+            all_logits = ds_logits + [main_logits]
+            ds_w = self.ds_weights
+            all_weights = ds_w + [1.0]  # Main prediction always gets 1.0.
+        else:
+            all_logits = [logits]
+            all_weights = [1.0]
+
+        total_loss = 0
+        for p, w in zip(all_logits, all_weights):
+            if targets.shape[-1] != p.shape[-1]:
+                targets_resized = F.interpolate(targets, size=p.shape[-1], mode='nearest')
+            else:
+                targets_resized = targets
+            
+            bce_loss = self.bce(p, targets_resized)
+            dice_loss = self.dice(p, targets_resized)
+            total_loss += w * (self.bce_weight * bce_loss + self.dice_weight * dice_loss)
+            
+        return total_loss / sum(all_weights)
+
 
 @torch.no_grad()
 def dice_coefficient(logits: torch.Tensor, targets: torch.Tensor, threshold: float=0.5, eps: float=1e-6):
