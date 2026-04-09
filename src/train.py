@@ -210,6 +210,9 @@ class ModelTrainer(MetricsHistory):
             print(f"Resuming training {self.configer.model_config['model_name']} from epoch {self.epoch} using {self.configer.model_config['solver_type']}.")
         
         if bool(self.configer.model_config['scheduler_on']):
+            
+            self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=10, eta_min=1e-6)
+            '''
             # Set scheduler.
             self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
                 self.optimizer, 
@@ -217,6 +220,7 @@ class ModelTrainer(MetricsHistory):
                 factor=0.9,
                 patience=self.configer.model_config['scheduler_patience']
             )
+            '''
             if sched_dict is not None:
                 self.scheduler.load_state_dict(sched_dict)
             print("Scheduler ON")
@@ -286,8 +290,11 @@ class ModelTrainer(MetricsHistory):
                 targets=masks
                 )
             loss.backward()
-            nn.utils.clip_grad_norm_(self.net.parameters(), max_norm=1)
+            nn.utils.clip_grad_norm_(self.net.parameters(), max_norm=1.0)
             self.optimizer.step()
+
+            if isinstance(logits, tuple):
+                logits, _ = logits
 
             self.update_metrics(
                 split = "train",
@@ -402,7 +409,7 @@ class ModelTrainer(MetricsHistory):
         
         rand_int = random_indices[0]
         print('Prediction:', ((torch.sigmoid(logits[rand_int]) > self.mask_threshold).float()).sum(dim=1).detach())
-        print('Ground:', masks[rand_int].sum(dim=1).detach())
+        print('Ground:    ', masks[rand_int].sum(dim=1).detach())
         
         logits = logits[random_indices]
         masks = masks[random_indices]
@@ -430,9 +437,10 @@ class ModelTrainer(MetricsHistory):
             self.__test()
             
             if self.scheduler is not None:
-                self.scheduler.step(self.metrics[self.configer.model_config["checkpoints_metric"]]['val'].avg)
+                #self.scheduler.step(self.metrics[self.configer.model_config["checkpoints_metric"]]['val'].avg)
+                self.scheduler.step()
                 print('lr_0:', self.optimizer.param_groups[0]["lr"])
-                print('lr_1:', self.optimizer.param_groups[1]["lr"])
+                #print('lr_1:', self.optimizer.param_groups[1]["lr"])
 
             self.log_epoch_history(['train', 'val', 'test'])
             self.print_metrics(['train', 'val', 'test'])

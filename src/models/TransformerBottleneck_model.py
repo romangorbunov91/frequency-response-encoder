@@ -177,7 +177,7 @@ class _TransformerBottleneck_model(nn.Module):
                 in_channels: int,
                 out_channels: int,
                 features: List[int],
-                deep_supervision: bool=False
+                deep_supervision: bool=True
                 ):
         super(_TransformerBottleneck_model, self).__init__()
         
