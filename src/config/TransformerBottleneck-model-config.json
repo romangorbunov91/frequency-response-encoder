@@ -1,7 +1,7 @@
 {
   "model_name": "TransformerBottleneck-model",
   "dataset_family": "zeros-poles-dataset",
-  "dataset_name": "zeros-poles-dataset",
+  "dataset_name": "zeros-poles-dataset_Nzp0",
   "feature_list": [32, 64, 128, 256, 512],
   "mask_halfwindow": 16,
   "mask_threshold": 0.5,
@@ -12,7 +12,7 @@
   "early_stop_number": 50,
   "workers": 4,
   "input_size": [4, 512],
-  "base_lr": 0.001,
+  "base_lr": 0.00001,
   "weight_decay": 0.0001,
   "solver_type": "Adam",
   "batch_size": 360,
