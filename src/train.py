@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import json
 
 import numpy as np
 from tqdm import tqdm
@@ -9,6 +10,7 @@ import torch.nn as nn
 # Import Utils.
 from utils.metrics import AverageMeter, CombinedLoss, dice_coefficient, iou_score, pixel_accuracy
 from utils.debug_functions import visualize_predictions
+from utils.logging_functions import build_output_dict
 
 # Import Datasets.
 from torch.utils.data import DataLoader
@@ -428,12 +430,12 @@ class ModelTrainer(MetricsHistory):
             )
         # END debug section.
         
-    def train(self):
+    def train(self) -> None:
         
         for n in range(self.configer['epochs']):
             print("Starting epoch {} of {}.".format(self.epoch + 1, self.configer['epochs'] + self.epoch_init))
             self.__train()
-            ret = self.__val()
+            val_return = self.__val()
             self.__test()
             
             if self.scheduler is not None:
@@ -446,15 +448,21 @@ class ModelTrainer(MetricsHistory):
             self.print_metrics(['train', 'val', 'test'])
             self.reset_metrics()
 
-            if ret < 0:
+            if val_return < 0:
                 print("Got no improvement for {} subsequent epochs. Finished epoch {}, than stopped."
                       .format(self.configer.model_config["early_stop_number"], self.epoch_init + n+1))
                 break
             
             self.epoch += 1
-        
-        return self.train_history, \
-            len(self.train_loader.dataset), \
-            len(self.val_loader.dataset), \
-            len(self.test_loader.dataset), \
-            self.model_size
+
+            output_dict = build_output_dict(
+                configer=self.configer,
+                train_history=self.train_history,
+                run_id=self.configer.run_id,
+                train_size=len(self.train_loader.dataset),
+                val_size=len(self.val_loader.dataset),
+                test_size=len(self.test_loader.dataset),
+                model_param_count=self.model_size)
+            
+            with open(Path(self.configer.general_config["logs_dir"]) / (self.configer.output_file_name + '.json'), "w") as f:
+                json.dump(output_dict, f, indent=4)
