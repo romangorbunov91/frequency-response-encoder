@@ -12,7 +12,7 @@
   "early_stop_number": 50,
   "workers": 4,
   "input_size": [4, 512],
-  "base_lr": 0.003,
+  "base_lr": 0.001,
   "weight_decay": 0.0001,
   "solver_type": "Adam",
   "batch_size": 360,
