@@ -25,7 +25,7 @@ def build_output_dict(
         },
         "dataset": {
             "name": configer.dataset_config["dataset_name"],
-            "family": configer.dataset_config["dataset_family"],
+            "family": configer.model_config["dataset_family"],
             "item_size": configer.dataset_config["item_size"],
             "train_size": train_size,
             "val_size": val_size,
