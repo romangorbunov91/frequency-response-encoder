@@ -213,7 +213,7 @@ class ModelTrainer(MetricsHistory):
         
         if bool(self.configer.model_config['scheduler_on']):
             
-            self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=10, eta_min=1e-6)
+            self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=10, eta_min=1e-7)
             '''
             # Set scheduler.
             self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
