@@ -5,6 +5,8 @@ from typing import Union
 
 import torch
 
+import matplotlib
+matplotlib.use('Agg')  # Must be called BEFORE pyplot.
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
