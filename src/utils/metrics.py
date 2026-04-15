@@ -39,7 +39,10 @@ class DiceLoss(nn.Module):
         
         dice = (2. * intersection) / (union + self.eps)
         
-        # Dice loss.
+        # Set Dice to 1.0 for channels with no ground truth
+        empty_targets = targets.sum(dim=2) == 0
+        dice = torch.where(empty_targets, torch.ones_like(dice), dice)
+        
         return 1.0 - dice.mean()
 
 class CombinedLoss(nn.Module):
@@ -88,6 +91,10 @@ def dice_coefficient(logits: torch.Tensor, targets: torch.Tensor, threshold: flo
     union = predictions.sum(dim=2) + targets.sum(dim=2)
     
     dice = (2. * intersection) / (union + eps)
+
+    # Set Dice to 1.0 for channels with no ground truth.
+    empty_targets = targets.sum(dim=2) == 0
+    dice = torch.where(empty_targets, torch.ones_like(dice), dice)
     
     return dice.mean().item()
 
@@ -103,10 +110,14 @@ def iou_score(logits: torch.Tensor, targets: torch.Tensor, threshold: float=0.5,
     
     iou = intersection / (union - intersection + eps)
     
+    # Set iou to 1.0 for channels with no ground truth.
+    empty_targets = targets.sum(dim=2) == 0
+    iou = torch.where(empty_targets, torch.ones_like(iou), iou)
+
     return iou.mean().item()
 
 @torch.no_grad()
-def pixel_accuracy(logits: torch.Tensor, targets: torch.Tensor, threshold: float=0.5):
+def pixel_accuracy(logits: torch.Tensor, targets: torch.Tensor, threshold: float=0.5, eps: float=1e-6):
     # Input shapes: [B, C, Length]
     
     predictions = (torch.sigmoid(logits) > threshold).float()
@@ -114,4 +125,4 @@ def pixel_accuracy(logits: torch.Tensor, targets: torch.Tensor, threshold: float
     
     correct = (predictions == targets).float().sum(dim=2)
     
-    return (correct / predictions.shape[2]).mean().item()
+    return (correct / (predictions.shape[2] + eps)).mean().item()
