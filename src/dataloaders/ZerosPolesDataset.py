@@ -34,6 +34,7 @@ def linear_idx_to_log_idx(
     ):
 
     """Map linear spacing index/indices to equivalent log spacing index/indices."""
+
     positions = np.asarray(positions)
     R = fmax / fmin
     N = total_bits - 1
@@ -85,34 +86,6 @@ class ZerosPolesDataset(Dataset):
             
     def __len__(self) -> int:
         return len(self.samples)
-
-    def _apply_data_transform(self,
-        data_tensor: torch.Tensor,
-        diff_transform_lvl_1: bool = False,
-        diff_transform_lvl_2: bool = False
-        ) -> torch.Tensor:
-        
-        if not diff_transform_lvl_1 and not diff_transform_lvl_2:
-            return data_tensor
-    
-        diff1 = torch.diff(data_tensor, dim=1)
-        raw_diff1 = torch.cat([diff1, diff1[:, -1:]], dim=1)
-
-        threshold = torch.quantile(raw_diff1.abs(), 0.95)
-        diff1 = torch.where(raw_diff1.abs() > threshold, torch.sign(raw_diff1) * threshold, raw_diff1)
-
-        if diff_transform_lvl_2:
-            diff2 = torch.diff(diff1, dim=1)
-            raw_diff2 = torch.cat([diff2, diff2[:, -1:]], dim=1)
-            threshold = torch.quantile(raw_diff2.abs(), 0.95)
-            diff2 = torch.where(raw_diff2.abs() > threshold, torch.sign(raw_diff2) * threshold, raw_diff2)
-            
-        if diff_transform_lvl_1 and not diff_transform_lvl_2:
-            return diff1
-        if not diff_transform_lvl_1 and diff_transform_lvl_2:
-            return diff2
-        
-        return torch.cat([diff1*1e3/4, diff2*1e5/4], dim=0)
         
     def _augmentations_(self, data_tensor, masks_tensor):
         
@@ -197,14 +170,23 @@ class ZerosPolesDataset(Dataset):
             raise FileNotFoundError(f"File not found: {sample_path}")
         
         data_np = (np.loadtxt(self.dataset_path / f"{sample_id}.csv", delimiter=',', skiprows=1)).T
-
-        freq_lin = data_np[0, :]
-        freq_log = np.logspace(np.log10(freq_lin.min()), np.log10(freq_lin.max()), len(freq_lin))
-        z = data_np[1, :] + 1j * data_np[2, :]
-        magnitude = np.interp(freq_log, freq_lin, np.log10(np.abs(z)))
-        phase = np.interp(freq_log, freq_lin, np.unwrap(np.angle(z)))
         
-        data_tensor = torch.from_numpy(np.vstack([data_np[0, :], magnitude, phase])).float()
+        freq = data_np[0, :]
+        magnitude = data_np[1, :]
+        phase = data_np[2, :]
+        '''
+        Np = len(freq)
+        freq_log = np.logspace(np.log10(freq.min()), np.log10(freq.max()), Np)
+        
+        z = data_np[1, :] + 1j * data_np[2, :]
+        magnitude = np.interp(freq_log, freq, np.log10(np.abs(z)))
+        phase = np.interp(freq_log, freq, np.unwrap(np.angle(z)))
+        '''
+        mag_ph_np = np.vstack([magnitude, phase])
+        mag_ph_diff1 = np.gradient(mag_ph_np, axis=1)
+        mag_ph_diff2 = np.gradient(mag_ph_diff1, axis=1)
+        
+        data_tensor = torch.from_numpy(np.vstack([mag_ph_diff1, mag_ph_diff2])).float()
 
         mask_dict = self.masks[sample_id]
         masks_list = []
@@ -213,18 +195,14 @@ class ZerosPolesDataset(Dataset):
                 continue
             masks_list.append(
                 positions_to_mask(
-                        positions=linear_idx_to_log_idx(
-                            positions=positions,
-                            total_bits=data_tensor.shape[-1],
-                            fmin=freq_lin[0],
-                            fmax=freq_lin[-1]
-                            ),
-                        total_bits=data_tensor.shape[-1],
+                        positions=positions,
+                        total_bits=len(freq),
                         halfwindow=self.mask_halfwindow
                     ),
                 )
         masks_tensor = torch.from_numpy(np.vstack(masks_list)).float()
         
+        '''
         if self.transforms:
             data_tensor, masks_tensor, freq_tensor = self._augmentations_(data_tensor, masks_tensor)
         else:
@@ -236,5 +214,6 @@ class ZerosPolesDataset(Dataset):
             diff_transform_lvl_1=self.diff_transform_lvl_1,
             diff_transform_lvl_2=self.diff_transform_lvl_2
         )       
-
-        return data_tensor_transformed, masks_tensor, freq_tensor
+        '''
+        
+        return data_tensor, masks_tensor, torch.from_numpy(freq).float()
