@@ -16,7 +16,7 @@
   "weight_decay": 0.0001,
   "solver_type": "Adam",
   "batch_size": 360,
-  "epochs": 1000,
+  "epochs": 2000,
   "scheduler_on": true,
   "scheduler_patience": 30
 }
