@@ -14,7 +14,7 @@ def build_output_dict(
     metadata = {
         "run_id": run_id,
         "model": {
-            "name": configer.model_config["model_name"],
+            "model_name": configer.model_config["model_name"],
             "feature_list": configer.model_config["feature_list"],
             "input_size": configer.model_config["input_size"],
             "mask_halfwindow": configer.model_config["mask_halfwindow"],
@@ -24,8 +24,8 @@ def build_output_dict(
             "param_count": model_param_count,
         },
         "dataset": {
-            "name": configer.dataset_config["dataset_name"],
-            "family": configer.model_config["dataset_family"],
+            "dataset_family": configer.dataset_config["dataset_family"],
+            "dataset_name": configer.model_config["dataset_name"],
             "item_size": configer.dataset_config["item_size"],
             "train_size": train_size,
             "val_size": val_size,
