@@ -1,9 +1,9 @@
 {
   "model_name": "TransformerBottleneck-model",
   "dataset_family": "zeros-poles-dataset",
-  "dataset_name": "zeros-poles-dataset_Nzp1",
+  "dataset_name": "zeros-poles-dataset-noisy",
   "feature_list": [32, 64, 128, 256, 512],
-  "mask_halfwindow": 2,
+  "mask_halfwindow": 8,
   "mask_threshold": 0.5,
   "bce_weight": 0.25,
   "dice_weight": 0.75,
