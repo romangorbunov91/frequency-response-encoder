@@ -1,5 +1,5 @@
 {
-  "dataset_name": "zeros-poles-dataset",
+  "dataset_family": "zeros-poles-dataset",
   "train_dir": "train",
   "val_dir": "val",
   "test_dir": "test",
