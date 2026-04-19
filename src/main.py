@@ -34,9 +34,10 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
+    
     torch.autograd.set_detect_anomaly(True)
     configer = Configer(args)
-    
+
     # Read config-files.
     config_dir = Path("./src/config/")
     
@@ -56,7 +57,9 @@ if __name__ == "__main__":
         configer.dataset_config = json.load(f)
         
     set_seed(configer.general_config['seed'])
+    rng = np.random.default_rng(configer.general_config['seed'])
    
+    configer.rng = rng
     configer.device = configer.general_config.get("device").lower() if torch.cuda.is_available() else 'cpu'
     configer.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     configer.output_file_name = (f"{str(configer.model_config['model_name'])}")
@@ -67,4 +70,3 @@ if __name__ == "__main__":
     trainer = ModelTrainer(configer)
     trainer.init_model()
     trainer.train()
-    
