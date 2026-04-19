@@ -14,7 +14,7 @@ from utils.logging_functions import build_output_dict
 
 # Import Datasets.
 from torch.utils.data import DataLoader
-from dataloaders.ZerosPolesDataset import TransformsConfig, ZerosPolesDataset
+from dataloaders.ZerosPolesDataset import TransformsConfig, ZerosPolesDataset, ConversionTransforms, GeneralTransforms
 
 # Import Model.
 from models.model_utilizer import load_net, update_optimizer, ModelUtilizer
@@ -143,17 +143,35 @@ class ModelTrainer(MetricsHistory):
         self.bce_weight = self.configer.model_config["bce_weight"]
         self.dice_weight = self.configer.model_config["dice_weight"]
 
+        rng = self.configer.rng
+
         # Augmentation.
-        self.train_transforms = TransformsConfig(
-            #crop_ratio=[0.8, 1.0],
-            #time_delay=[0.0, 1e-9],
-            #noise_level=[5e-3, 30e-3],
-            #noise_reduce=2,
-            gain=[0.9, 1.1]
-        )
+        self.train_transforms = [
+            GeneralTransforms(
+                config=TransformsConfig(
+                    gain=[1.0, 1e4],
+                    #delay=[0.0, 1e-8],
+                    noise_level=[5e-6, 30e-6],
+                    noise_reduce=2
+                    ),
+                rng=rng
+                ),
+            ConversionTransforms(
+                num_iter=2,
+                return_input=False
+                )]
+
+        self.val_transforms = [
+            ConversionTransforms(
+                num_iter=2,
+                return_input=False
+                )]
         
-        self.val_transforms = None
-        self.test_transforms = None
+        self.test_transforms = [
+            ConversionTransforms(
+                num_iter=2,
+                return_input=False
+                )]
 
         if self.configer.model_config["model_name"] == 'parallelEncoder-model':
             self.model_type = parallelEncoder_model
