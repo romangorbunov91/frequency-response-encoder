@@ -2,7 +2,7 @@
     "metadata": {
         "run_id": "20260417_123439",
         "model": {
-            "name": "TransformerBottleneck-model",
+            "model_name": "TransformerBottleneck-model",
             "feature_list": [
                 32,
                 64,
@@ -21,8 +21,8 @@
             "param_count": 5292940
         },
         "dataset": {
-            "name": "zeros-poles-dataset",
-            "family": "zeros-poles-dataset",
+            "dataset_family": "zeros-poles-dataset",
+            "dataset_name": "zeros-poles-dataset_Nzp1",
             "item_size": [
                 2,
                 512
