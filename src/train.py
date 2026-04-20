@@ -151,7 +151,7 @@ class ModelTrainer(MetricsHistory):
                 config=TransformsConfig(
                     gain=[1.0, 1e4],
                     #delay=[0.0, 1e-8],
-                    noise_level=[5e-6, 30e-6],
+                    noise_level=[5e-3, 30e-3],
                     noise_reduce=2
                     ),
                 rng=rng
