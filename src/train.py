@@ -150,7 +150,7 @@ class ModelTrainer(MetricsHistory):
             GeneralTransforms(
                 config=TransformsConfig(
                     gain=[1.0, 1e4],
-                    #delay=[0.0, 1e-8],
+                    phase_delay=[0.0, 3.14],
                     noise_level=[5e-3, 30e-3],
                     noise_reduce=2
                     ),

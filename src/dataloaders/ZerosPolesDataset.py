@@ -29,7 +29,7 @@ def positions_to_mask(
 @dataclass
 class TransformsConfig:
     gain: List[float]=field(default_factory=lambda: [1.0, 1.0])
-    delay: List[float]=field(default_factory=lambda: [0.0, 0.0])
+    phase_delay: List[float]=field(default_factory=lambda: [0.0, 0.0])
     noise_level: List[float]=field(default_factory=lambda: [0.0, 0.0])
     noise_reduce: int=0
 
@@ -38,19 +38,19 @@ class TransformsConfig:
             raise ValueError("Gain values must be strictly positive for log10 scaling.")
         if self.gain[0] > self.gain[1]:
             raise ValueError("gain[0] must be <= gain[1].")
-        if any(x < 0 for x in self.delay):
+        if any(x < 0 for x in self.phase_delay):
             raise ValueError("Delay values can't be negative since "-" is applied inside.")
-        if self.delay[0] > self.delay[1]:
-            raise ValueError("delay[0] must be <= delay[1].")
+        if self.phase_delay[0] > self.phase_delay[1]:
+            raise ValueError("phase_delay[0] must be <= phase_delay[1].")
         if self.noise_level[0] > self.noise_level[1]:
             raise ValueError("noise_level[0] must be <= noise_level[1].")
     
 
 class GeneralTransforms:
     def __init__(self,
-            config: Optional[TransformsConfig] = None,
-            rng: Optional[np.random.Generator] = None
-            ):
+        config: Optional[TransformsConfig] = None,
+        rng: Optional[np.random.Generator] = None
+        ):
         
         self.config = config if config is not None else TransformsConfig()
         
@@ -67,7 +67,7 @@ class GeneralTransforms:
         # 2 - phase
         
         gain = self.config.gain
-        delay = self.config.delay
+        phase_delay = self.config.phase_delay
         noise_level = self.config.noise_level
         noise_reduce = self.config.noise_reduce
 
@@ -81,9 +81,10 @@ class GeneralTransforms:
         if any(x != 1.0 for x in gain):
             magnitude += 20*np.log10(gain[0] + rng.random() * (gain[1] - gain[0]))
         
-        # Random time-delay (phase only).
-        if max(delay) > 0.0:
-            phase -= 2 * np.pi * freq * (delay[0] + rng.random() * (delay[1] - delay[0]))
+        # Random phase-delay (phase only).
+        if max(phase_delay) > 0.0:
+            phase_coeff = (phase_delay[0] + rng.random() * (phase_delay[1] - phase_delay[0])) / freq[-1]
+            phase -= freq * phase_coeff
 
         # Random Noise.
         
@@ -126,13 +127,13 @@ class ConversionTransforms:
 
 class ZerosPolesDataset(Dataset):
     def __init__(
-        self,
-        dataset_dir: Union[str, Path],
-        split: str,
-        mask_halfwindow: int = 0,
-        samples: Optional[List] = None,
-        transforms: Optional[List] = None
-        ):
+            self,
+            dataset_dir: Union[str, Path],
+            split: str,
+            mask_halfwindow: int = 0,
+            samples: Optional[List] = None,
+            transforms: Optional[List] = None
+            ):
         
         super().__init__()
                 
@@ -182,9 +183,9 @@ class ZerosPolesDataset(Dataset):
                 continue
             masks_list.append(
                 positions_to_mask(
-                        positions=positions,
-                        total_bits=len(freq),
-                        halfwindow=self.mask_halfwindow
+                    positions=positions,
+                    total_bits=len(freq),
+                    halfwindow=self.mask_halfwindow
                     ),
                 )
         masks = np.vstack(masks_list)
