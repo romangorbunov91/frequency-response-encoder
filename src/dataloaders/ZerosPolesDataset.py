@@ -84,7 +84,7 @@ class GeneralTransforms:
         # Random phase-delay (phase only).
         if max(phase_delay) > 0.0:
             phase_coeff = (phase_delay[0] + rng.random() * (phase_delay[1] - phase_delay[0])) / freq[-1]
-            phase -= freq * phase_coeff
+            phase -= 180 / np.pi * freq * phase_coeff
 
         # Random Noise.
         
