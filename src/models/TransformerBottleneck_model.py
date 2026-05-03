@@ -91,10 +91,7 @@ class AttentionGate(nn.Module):
             nn.Sigmoid())
         self.relu = nn.ReLU(inplace=True)
 
-    def forward(self, g, x):
-        if x.shape[-1] != g.shape[-1]:
-            x = F.interpolate(x, size=g.shape[-1], mode='linear', align_corners=False)
-            
+    def forward(self, g, x):    
         g1 = self.W_g(g)
         x1 = self.W_x(x)
         psi = self.relu(g1 + x1)
@@ -152,7 +149,7 @@ class UpSample(nn.Module):
         scale_factor: int=2):
         super().__init__()
         self.up = nn.Sequential(
-            nn.Upsample(scale_factor=scale_factor, mode='linear', align_corners=True),
+            nn.Upsample(scale_factor=scale_factor, mode='nearest'),
             nn.Conv1d(
                 in_channels=in_channels,
                 out_channels=out_channels,
