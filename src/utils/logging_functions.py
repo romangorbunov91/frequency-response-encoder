@@ -57,10 +57,13 @@ def build_output_dict(
     best_epoch = train_history["epoch"][best_epoch_idx]
 
     summary = {
-        f"best_val_{checkpoints_metric}": train_history[f"val_{checkpoints_metric}"][best_epoch_idx],
         "best_epoch": best_epoch,
+        f"train_{checkpoints_metric}_at_best_epoch": train_history[f"train_{checkpoints_metric}"][best_epoch_idx],
+        f"val_{checkpoints_metric}_at_best_epoch": train_history[f"val_{checkpoints_metric}"][best_epoch_idx],
+        f"test_{checkpoints_metric}_at_best_epoch": train_history[f"test_{checkpoints_metric}"][best_epoch_idx],
         f"final_train_{checkpoints_metric}": train_history[f"train_{checkpoints_metric}"][-1],
         f"final_val_{checkpoints_metric}": train_history[f"val_{checkpoints_metric}"][-1],
+        f"final_test_{checkpoints_metric}": train_history[f"test_{checkpoints_metric}"][-1]
     }
 
     return {
