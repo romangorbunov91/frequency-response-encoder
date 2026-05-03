@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "run_id": "20260503_182452",
+        "run_id": "20260503_183729",
         "model": {
             "model_name": "TransformerBottleneck-model",
             "feature_list": [
@@ -38,27 +38,27 @@
         "solver_type": "Adam"
     },
     "summary": {
-        "best_val_dice": 0.43568432293832304,
+        "best_val_dice": 0.4345617599785328,
         "best_epoch": 1,
-        "final_train_dice": 0.43535804122686383,
-        "final_val_dice": 0.43568432293832304
+        "final_train_dice": 0.4361409637331963,
+        "final_val_dice": 0.4345617599785328
     },
     "train_log": [
         {
             "epoch": 1,
             "lr": 9.939057285945933e-06,
-            "train_loss": 0.5351477950811386,
-            "train_dice": 0.43535804122686383,
-            "train_iou": 0.4268535104393959,
-            "train_accuracy": 0.8346885234117508,
-            "val_loss": 0.5277297705411911,
-            "val_dice": 0.43568432293832304,
-            "val_iou": 0.42835922688245776,
-            "val_accuracy": 0.9626605421304703,
-            "test_loss": 0.5282125666737556,
-            "test_dice": 0.4232810724526644,
-            "test_iou": 0.4205022342503071,
-            "test_accuracy": 0.9699479371309281
+            "train_loss": 0.5354454112052918,
+            "train_dice": 0.4361409637331963,
+            "train_iou": 0.42724365919828416,
+            "train_accuracy": 0.8306396010518075,
+            "val_loss": 0.5279550712555647,
+            "val_dice": 0.4345617599785328,
+            "val_iou": 0.4276418935507536,
+            "val_accuracy": 0.9614813819527626,
+            "test_loss": 0.5285219728946686,
+            "test_dice": 0.42340477742254734,
+            "test_iou": 0.420516461879015,
+            "test_accuracy": 0.9675207108259201
         }
     ]
 }
