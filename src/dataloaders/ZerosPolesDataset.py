@@ -47,17 +47,9 @@ class TransformsConfig:
     
 
 class GeneralTransforms:
-    def __init__(self,
-        config: Optional[TransformsConfig] = None,
-        rng: Optional[np.random.Generator] = None
-        ):
+    def __init__(self, config: Optional[TransformsConfig] = None):
         
         self.config = config if config is not None else TransformsConfig()
-        
-        if rng is None:
-            self.rng = np.random.default_rng()
-        else:
-            self.rng = rng
 
     def __call__(self, data: np.ndarray) -> np.ndarray:
         
@@ -70,20 +62,18 @@ class GeneralTransforms:
         phase_delay = self.config.phase_delay
         noise_level = self.config.noise_level
         noise_reduce = self.config.noise_reduce
-
-        rng = self.rng
-        
+       
         freq = data[0, :]
         magnitude = data[1, :]
         phase = data[2, :]
         
         # Random gain (magnitude only).
         if any(x != 1.0 for x in gain):
-            magnitude += 20*np.log10(gain[0] + rng.random() * (gain[1] - gain[0]))
+            magnitude += 20*np.log10(gain[0] + np.random.random() * (gain[1] - gain[0]))
         
         # Random phase-delay (phase only).
         if max(phase_delay) > 0.0:
-            phase_coeff = (phase_delay[0] + rng.random() * (phase_delay[1] - phase_delay[0])) / freq[-1]
+            phase_coeff = (phase_delay[0] + np.random.random() * (phase_delay[1] - phase_delay[0])) / freq[-1]
             phase -= 180 / np.pi * freq * phase_coeff
 
         # Random Noise.
@@ -92,10 +82,10 @@ class GeneralTransforms:
         mag_ph = np.vstack([magnitude, phase])
         
         if max(noise_level) > 0.0:
-            noise = rng.standard_normal(size=mag_ph.shape)
-            noise_mask = (rng.random(size=noise.shape) < (0.5 ** noise_reduce)).astype(noise.dtype)
+            noise = np.random.standard_normal(size=mag_ph.shape)
+            noise_mask = (np.random.random(size=noise.shape) < (0.5 ** noise_reduce)).astype(noise.dtype)
             data_std = np.std(mag_ph, axis=-1, keepdims=True)
-            scale = noise_level[0] + rng.random() * (noise_level[1] - noise_level[0])
+            scale = noise_level[0] + np.random.random() * (noise_level[1] - noise_level[0])
             mag_ph += noise * noise_mask * data_std * scale
         
         return np.vstack([freq, mag_ph])

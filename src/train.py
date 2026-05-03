@@ -1,4 +1,5 @@
 import os
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"  # For deterministic cuBLAS
 from pathlib import Path
 import json
 
@@ -6,6 +7,7 @@ import numpy as np
 from tqdm import tqdm
 import torch
 import torch.nn as nn
+torch.use_deterministic_algorithms(True)
 
 # Import Utils.
 from utils.metrics import AverageMeter, CombinedLoss, dice_coefficient, iou_score, pixel_accuracy
@@ -26,7 +28,12 @@ from models.TransformerBottleneck_model import TransformerBottleneck_model
 
 # Setting seeds.
 def worker_init_fn(worker_id):
-    np.random.seed(torch.initial_seed() % 2 ** 32)
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    #random.seed(worker_seed)
+    torch.manual_seed(worker_seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(worker_seed)
 
 class MetricsHistory:
     def initialize_metrics(self, metric_names, phases):
@@ -143,8 +150,6 @@ class ModelTrainer(MetricsHistory):
         self.bce_weight = self.configer.model_config["bce_weight"]
         self.dice_weight = self.configer.model_config["dice_weight"]
 
-        rng = self.configer.rng
-
         # Augmentation.
         self.train_transforms = [
             GeneralTransforms(
@@ -153,8 +158,7 @@ class ModelTrainer(MetricsHistory):
                     phase_delay=[0.0, 3.14],
                     noise_level=[5e-3, 30e-3],
                     noise_reduce=2
-                    ),
-                rng=rng
+                    )
                 ),
             ConversionTransforms(
                 num_iter=2,
@@ -229,6 +233,9 @@ class ModelTrainer(MetricsHistory):
             self.optimizer.load_state_dict(optim_dict)
             print(f"Resuming training {self.configer.model_config['model_name']} from epoch {self.epoch} using {self.configer.model_config['solver_type']}.")
         
+        shuffle_generator = torch.Generator()
+        shuffle_generator.manual_seed(self.configer.general_config['seed'])
+
         if bool(self.configer.model_config['scheduler_on']):
             
             self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=20, eta_min=1e-7)
@@ -259,6 +266,7 @@ class ModelTrainer(MetricsHistory):
                     ), 
                 batch_size=self.configer.model_config["batch_size"],
                 shuffle=True,
+                generator=shuffle_generator,
                 num_workers=self.configer.model_config["workers"],
                 worker_init_fn=worker_init_fn,
                 pin_memory=True)
