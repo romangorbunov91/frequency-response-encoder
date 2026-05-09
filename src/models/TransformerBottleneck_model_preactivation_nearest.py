@@ -13,6 +13,11 @@ class ResConvBlock(nn.Module):
         ):
         super().__init__()
         self.conv = nn.Sequential(
+            nn.GroupNorm(
+                num_groups=1,
+                num_channels=in_channels
+                ),
+            nn.GELU(),
             nn.Conv1d(
                 in_channels=in_channels,
                 out_channels=out_channels,
@@ -26,7 +31,6 @@ class ResConvBlock(nn.Module):
                 num_channels=out_channels
                 ),
             nn.GELU(),
-            nn.Dropout1d(p=dropout),
             nn.Conv1d(
                 in_channels=out_channels,
                 out_channels=out_channels,
@@ -35,11 +39,6 @@ class ResConvBlock(nn.Module):
                 padding=1,
                 bias=False
                 ),
-            nn.GroupNorm(
-                num_groups=1,
-                num_channels=out_channels
-                ),
-            nn.GELU(),
             nn.Dropout1d(p=dropout)
         )
         self.skip = nn.Conv1d(
@@ -48,10 +47,9 @@ class ResConvBlock(nn.Module):
             kernel_size=1,
             bias=False
             ) if in_channels != out_channels else nn.Identity()
-        self.out = nn.GELU()
 
     def forward(self, x):
-        return self.out(self.conv(x) + self.skip(x))
+        return self.conv(x) + self.skip(x)
 
 class AttentionGate(nn.Module):
     """Attention Gate for Skip Connections (Attention U-Net style)"""
@@ -93,7 +91,7 @@ class AttentionGate(nn.Module):
             nn.Sigmoid())
         self.relu = nn.ReLU(inplace=True)
 
-    def forward(self, g, x):   
+    def forward(self, g, x):    
         g1 = self.W_g(g)
         x1 = self.W_x(x)
         psi = self.relu(g1 + x1)
@@ -167,6 +165,7 @@ class UpSample(nn.Module):
     def forward(self, x): return self.up(x)
 
 
+
 class _TransformerBottleneck_model(nn.Module):
 
     def __init__(self,
@@ -178,9 +177,16 @@ class _TransformerBottleneck_model(nn.Module):
         super(_TransformerBottleneck_model, self).__init__()
         
         self.deep_supervision = deep_supervision
-
+        self.input_conv = nn.Conv1d(
+                in_channels=in_channels,
+                out_channels=features[0],
+                kernel_size=3,
+                stride=1,
+                padding=1,
+                bias=False
+                )
         # Encoder.
-        self.enc1 = ResConvBlock(in_channels, features[0])
+        self.enc1 = ResConvBlock(features[0], features[0])
         self.enc2 = ResConvBlock(features[0], features[1])
         self.enc3 = ResConvBlock(features[1], features[2])
         self.enc4 = ResConvBlock(features[2], features[3])
@@ -247,7 +253,7 @@ class _TransformerBottleneck_model(nn.Module):
 
     def forward(self, x):
         # Encoder
-        e1 = self.enc1(x)
+        e1 = self.enc1(self.input_conv(x))
         e2 = self.enc2(self.pool(e1))
         e3 = self.enc3(self.pool(e2))
         e4 = self.enc4(self.pool(e3))
@@ -257,15 +263,19 @@ class _TransformerBottleneck_model(nn.Module):
 
         # Decoder
         g4 = self.up4(b)
+        #e4_up = F.interpolate(e4, size=g4.shape[-1], mode='linear', align_corners=False)
         d4 = self.dec4(torch.cat([g4, self.att4(g4, e4)], dim=1))
 
         g3 = self.up3(d4)
+        #e3_up = F.interpolate(e3, size=g3.shape[-1], mode='linear', align_corners=False)
         d3 = self.dec3(torch.cat([g3, self.att3(g3, e3)], dim=1))
 
         g2 = self.up2(d3)
+        #e2_up = F.interpolate(e2, size=g2.shape[-1], mode='linear', align_corners=False)
         d2 = self.dec2(torch.cat([g2, self.att2(g2, e2)], dim=1))
 
         g1 = self.up1(d2)
+        #e1_up = F.interpolate(e1, size=g1.shape[-1], mode='linear', align_corners=False)
         d1 = self.dec1(torch.cat([g1, self.att1(g1, e1)], dim=1))
 
         out_main = self.final_conv(d1)
