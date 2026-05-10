@@ -27,7 +27,7 @@ def plot_responses(
     data: np.ndarray,
     title: Optional[str] = None,
     regions: Optional[np.ndarray] = None,
-    masks: Optional[List[int]] = None,
+    zeros_poles_positions: Optional[List[int]] = None,
     save_path: Optional[Union[str, Path]] = None
     ) -> None:
 
@@ -70,9 +70,9 @@ def plot_responses(
                             color=m_cfg['color'], alpha=0.25, label=m_cfg['label'])
 
         # Mark masks.
-        if masks is not None:
+        if zeros_poles_positions is not None:
             for m_idx, m_cfg in enumerate(plot_config['masks']):
-                indices = masks[m_cfg['label']]
+                indices = zeros_poles_positions[m_cfg['label']]
                 if len(indices) > 0:
                     has_mask = True
                     ax.plot(x_data[indices], y_data[indices], 
@@ -86,8 +86,17 @@ def plot_responses(
                 ax.set_title(title, fontsize=plot_config['fontsize'], fontweight='bold')
             
         ax.set_xscale(cfg['xscale'])
-        ax.set_xlabel(cfg['xlabel'], fontsize=plot_config['fontsize'])
-        ax.set_ylabel(cfg['ylabel'], fontsize=plot_config['fontsize'])
+
+        ax.set_xlabel(
+            cfg['xlabel'],
+            fontsize=plot_config['fontsize'],
+            fontdict={'family': 'Times New Roman', 'weight': 'bold'}
+            )
+        ax.set_ylabel(
+            cfg['ylabel'],
+            fontsize=plot_config['fontsize'],
+            fontdict={'family': 'Times New Roman', 'weight': 'bold'}
+            )
         ax.grid(True, alpha=plot_config['grid_alpha'], axis='both', linestyle='--')
         
         # Only show legend if masks exist.
