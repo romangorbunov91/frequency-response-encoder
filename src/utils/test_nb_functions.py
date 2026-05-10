@@ -54,8 +54,13 @@ def plot_responses(
         x_data = data_map[cfg['arg_key']]
         y_data = data_map[cfg['data_key']]
         
-        ax.plot(x_data, y_data, '.', markersize=plot_config['markersize_data'], 
-                linestyle='-', alpha=0.7)
+        ax.plot(
+            x_data,
+            y_data,
+            '.',
+            markersize=plot_config['markersize_data'],
+            linestyle='-',
+            alpha=0.7)
         
         has_mask = False
         
@@ -90,12 +95,12 @@ def plot_responses(
         ax.set_xlabel(
             cfg['xlabel'],
             fontsize=plot_config['fontsize'],
-            fontdict={'family': 'Times New Roman', 'weight': 'bold'}
+            fontdict=plot_config['label_font']
             )
         ax.set_ylabel(
             cfg['ylabel'],
             fontsize=plot_config['fontsize'],
-            fontdict={'family': 'Times New Roman', 'weight': 'bold'}
+            fontdict=plot_config['label_font']
             )
         ax.grid(True, alpha=plot_config['grid_alpha'], axis='both', linestyle='--')
         
