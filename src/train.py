@@ -156,8 +156,8 @@ class ModelTrainer(MetricsHistory):
                 config=TransformsConfig(
                     gain=[1.0, 1e4],
                     phase_delay=[0.0, 3.14],
-                    noise_level=[5e-3, 30e-3],
-                    noise_reduce=2
+                    noise_level=[20e-3, 300e-3],
+                    noise_reduce=1
                     )
                 ),
             ConversionTransforms(
