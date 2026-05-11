@@ -55,10 +55,8 @@ def plot_responses(
         y_data = data_map[cfg['data_key']]
         
         ax.plot(
-            x_data,
-            y_data,
-            '.',
-            markersize=plot_config['markersize_data'],
+            x_data, y_data,
+            '.', markersize=plot_config['markersize_data'],
             linestyle='-',
             alpha=0.7)
         
@@ -112,6 +110,76 @@ def plot_responses(
                 framealpha=plot_config['legend_framealpha']
                 )
 
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, bbox_inches='tight')
+    
+    plt.show()
+    plt.close(fig)
+
+def plot_multiple_responses(
+    plot_config: Dict[str, Any],
+    data_list: List[np.ndarray],
+    title: Optional[str] = None,
+    save_path: Optional[Union[str, Path]] = None
+    ) -> None:
+
+    data_map_list = []
+    for data in data_list:
+        data_map_list.append({
+            'samples': np.arange(data.shape[-1]),
+            'freq': data[0,:],
+            'mag' : data[1,:],
+            'ph'  : data[2,:]
+        })
+
+    fig, axs = plt.subplots(
+        nrows=2,
+        ncols=1,
+        figsize=(plot_config['fig_width'],
+                 plot_config['fig_height'])
+        )
+    axs = np.array(axs).flatten()
+    for idx, cfg in enumerate(plot_config['plots']):
+        ax = axs[idx]
+        
+        for data_map in data_map_list:
+            # Plot Main Data.
+            x_data = data_map[cfg['arg_key']]
+            y_data = data_map[cfg['data_key']]
+            
+            ax.plot(
+                x_data, y_data,
+                '.', markersize=plot_config['markersize_data'],
+                linestyle='-',
+                alpha=0.7)
+            
+        # Set title (on the first plot of the sample group only).
+        if title is not None:
+            if idx == 0:
+                ax.set_title(title, fontsize=plot_config['fontsize'], fontweight='bold')
+            
+        ax.set_xscale(cfg['xscale'])
+
+        ax.set_xlabel(
+            cfg['xlabel'],
+            fontsize=plot_config['fontsize'],
+            fontdict=plot_config['label_font']
+            )
+        ax.set_ylabel(
+            cfg['ylabel'],
+            fontsize=plot_config['fontsize'],
+            fontdict=plot_config['label_font']
+            )
+        ax.grid(True, alpha=plot_config['grid_alpha'], axis='both', linestyle='--')
+        '''
+        ax.legend(
+            fontsize=plot_config['fontsize_legend'],
+            loc=plot_config['legend_loc'],
+            framealpha=plot_config['legend_framealpha']
+            )
+        '''
     plt.tight_layout()
     
     if save_path:
