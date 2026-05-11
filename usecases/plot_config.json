@@ -1,0 +1,37 @@
+{
+    "fontsize": 14,
+    "fontsize_legend": 9,
+    "fig_width": 7,
+    "fig_height": 4.6,
+    "markersize_data": 3,
+    "markersize_mask": 10,
+    "grid_alpha": 0.5,
+    "legend_framealpha": 0.8,
+    "legend_loc": "best",
+    "label_font": {
+        "family": "Times New Roman",
+        "weight": "bold"
+        },
+    "plots": [
+        {
+            "ylabel": "Амплитуда, дБ",
+            "xlabel": null,
+            "xscale": "log",
+            "arg_key": "freq",
+            "data_key": "mag"
+        },
+        {
+            "ylabel": "Фаза, град.",
+            "xlabel": "Частота, Гц",
+            "xscale": "log",
+            "arg_key": "freq",
+            "data_key": "ph"
+        }
+    ],
+    "masks": [
+        {"label": "left_poles",  "color": "#e377c2", "marker": "o"},
+        {"label": "right_poles", "color": "#d62728", "marker": "p"},
+        {"label": "left_zeros",  "color": "#bcbd22", "marker": "s"},
+        {"label": "right_zeros", "color": "#ff7f0e", "marker": "^"}
+    ]
+}
