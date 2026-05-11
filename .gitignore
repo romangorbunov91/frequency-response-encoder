@@ -11,5 +11,6 @@
 !/requirements.txt
 !debug_notebook.ipynb
 !test_nb.ipynb
+!multipliers_test.ipynb
 
 **/__pycache__/
