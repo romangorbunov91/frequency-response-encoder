@@ -3,6 +3,65 @@ from pathlib import Path
 from typing import Union, Any, Dict, Optional, List
 from matplotlib import pyplot as plt
 
+def find_multipliers(fz: float, fd: float, err_rel_ref: float, Nmin: int, Nmax: int):
+    R = fd / fz
+    
+    if R < 2:
+        raise ValueError("fz must be < fd/2 for a valid solution.")
+    
+    err_abs_ref = fz*err_rel_ref
+    Mmax = int(R / 2)
+    N_vals = np.arange(Nmin, Nmax + 1, dtype=float)
+    
+    N_arr = np.empty(Mmax, dtype=np.int64)
+    M_arr = np.empty(Mmax, dtype=np.int64)
+    L_arr = np.empty(Mmax, dtype=np.int64)
+    fz_approx_arr = np.empty(Mmax)
+    err_abs_arr = np.empty(Mmax)
+    err_rel_arr = np.empty(Mmax)
+    tol_flag_arr = np.empty(Mmax, dtype=bool)
+    
+    for mdx, M in enumerate(range(1, Mmax+1)):
+        L = np.floor(M * N_vals / R)
+        # In-place clamp.
+        np.maximum(L, 1, out=L)
+        
+        R_approx = M * N_vals / L
+        fz_approx = fd / R_approx
+        err_abs = np.abs(fz - fz_approx)
+        
+        valid_idx = np.nonzero(err_abs < err_abs_ref)[0]
+        
+        if valid_idx.size > 0:
+            pos = valid_idx[0]
+            tol_flag_arr[mdx] = True
+        else:
+            pos = np.argmin(err_abs)
+            tol_flag_arr[mdx] = False
+
+        
+        N_arr[mdx] = int(N_vals[pos])
+        M_arr[mdx] = M
+        L_arr[mdx] = int(L[pos])
+        fz_approx_arr[mdx] = fz_approx[pos]
+        err_abs_arr[mdx] = err_abs[pos]
+        err_rel_arr[mdx] = err_abs[pos] / fz_approx[pos]
+    
+    if np.any(tol_flag_arr):
+        valid_mdx = np.nonzero(tol_flag_arr)[0]
+        best_mdx = valid_mdx[np.argmin(N_arr[valid_mdx])]
+    else:
+        best_mdx = np.argmin(err_abs_arr)
+        
+    return (int(N_arr[best_mdx]),
+            int(M_arr[best_mdx]),
+            int(L_arr[best_mdx])), \
+           (float(fz_approx_arr[best_mdx]),
+            float(err_abs_arr[best_mdx]),
+            float(err_rel_arr[best_mdx]),
+            bool(tol_flag_arr[best_mdx]))
+
+
 def zeros_poles_freq_to_positions(
         zeros_poles_freq_dict: Dict[str, List[float]],
         freq: np.ndarray
@@ -121,6 +180,7 @@ def plot_responses(
 def plot_multiple_responses(
     plot_config: Dict[str, Any],
     data_list: List[np.ndarray],
+    legend: List[str],
     title: Optional[str] = None,
     save_path: Optional[Union[str, Path]] = None
     ) -> None:
@@ -144,7 +204,7 @@ def plot_multiple_responses(
     for idx, cfg in enumerate(plot_config['plots']):
         ax = axs[idx]
         
-        for data_map in data_map_list:
+        for mdx, data_map in enumerate(data_map_list):
             # Plot Main Data.
             x_data = data_map[cfg['arg_key']]
             y_data = data_map[cfg['data_key']]
@@ -152,8 +212,9 @@ def plot_multiple_responses(
             ax.plot(
                 x_data, y_data,
                 '.', markersize=plot_config['markersize_data'],
-                linestyle='-',
-                alpha=0.7)
+                linestyle=plot_config['line_styles'][mdx],
+                alpha=plot_config['line_alphas'][mdx],
+                label=legend[mdx])
             
         # Set title (on the first plot of the sample group only).
         if title is not None:
@@ -173,13 +234,13 @@ def plot_multiple_responses(
             fontdict=plot_config['label_font']
             )
         ax.grid(True, alpha=plot_config['grid_alpha'], axis='both', linestyle='--')
-        '''
+        
         ax.legend(
             fontsize=plot_config['fontsize_legend'],
             loc=plot_config['legend_loc'],
             framealpha=plot_config['legend_framealpha']
             )
-        '''
+
     plt.tight_layout()
     
     if save_path:

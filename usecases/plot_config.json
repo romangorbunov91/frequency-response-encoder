@@ -3,9 +3,11 @@
     "fontsize_legend": 9,
     "fig_width": 7,
     "fig_height": 4.6,
-    "markersize_data": 3,
+    "markersize_data": 4,
     "markersize_mask": 10,
     "grid_alpha": 0.5,
+    "line_styles": ["-", "-"],
+    "line_alphas": [1.0, 0.5],
     "legend_framealpha": 0.8,
     "legend_loc": "best",
     "label_font": {
