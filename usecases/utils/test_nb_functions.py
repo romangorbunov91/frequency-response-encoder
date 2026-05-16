@@ -1,7 +1,48 @@
 import numpy as np
 from pathlib import Path
-from typing import Union, Any, Dict, Optional, List
+from typing import Union, Any, Dict, Optional, List, Sequence
 from matplotlib import pyplot as plt
+
+def rmse_complex(
+    response_in: np.ndarray,
+    response_ref: np.ndarray,
+    Nlim: Optional[Sequence[Optional[int]]] = None,
+    eps: float = 1e-12
+) -> float:
+
+    if response_ref.shape[0] != 3 or response_in.shape[0] != 3:
+        raise ValueError("Both inputs must be of shape (3, N)")
+        
+    if Nlim is None:
+        Nlim = [None, None]
+    Nslice = slice(Nlim[0], Nlim[1])
+    
+    freq_ref   = response_ref[0, Nslice]
+    mag_db_ref = response_ref[1, Nslice]
+    ph_deg_ref = response_ref[2, Nslice]
+
+    freq   = response_in[0, Nslice]
+    mag_db = response_in[1, Nslice]
+    ph_deg = response_in[2, Nslice]
+
+    mag_abs_ref = 10**(mag_db_ref / 20)
+    mag_abs     = 10**(mag_db     / 20)
+    
+    complex_ref = mag_abs_ref * np.exp(1j*np.deg2rad(ph_deg_ref))
+    complex_in  = mag_abs     * np.exp(1j*np.deg2rad(ph_deg    ))
+
+    # Interpolate real & imag separately to avoid phase-wrapping artifacts.
+    real_interp = np.interp(freq_ref, freq, complex_in.real)
+    imag_interp = np.interp(freq_ref, freq, complex_in.imag)
+    complex_interp = real_interp + 1j * imag_interp
+
+    RMSE = np.sqrt(np.mean(np.abs(complex_ref - complex_interp)**2))
+
+    # Relative and Normalized RMSE.
+    RRMSE = RMSE / (np.sqrt(np.mean(mag_abs_ref**2)) + eps)
+    NRMSE = RMSE / (np.max(mag_abs_ref) - np.min(mag_abs_ref) + eps)
+    return float(RMSE), float(RRMSE), float(NRMSE)
+
 
 def find_multipliers(fz: float, fd: float, err_rel_ref: float, Nmin: int, Nmax: int):
     R = fd / fz
