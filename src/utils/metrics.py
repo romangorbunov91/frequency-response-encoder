@@ -47,34 +47,41 @@ class DiceLoss(nn.Module):
 
 class CombinedLoss(nn.Module):
 
-    def __init__(self, bce_weight=0.5, dice_weight=0.5):
-        super(CombinedLoss, self).__init__()
+    def __init__(self,
+            bce_weight: float = 0.5,
+            dice_weight: float = 0.5,
+            ds_weights: list[float] | None = None
+        ):
+        super().__init__()
         self.bce_weight = bce_weight
         self.dice_weight = dice_weight
         self.bce = nn.BCEWithLogitsLoss()
         self.dice = DiceLoss()
-        self.ds_weights = [0.4, 0.6, 0.7, 0.8]
+        self.ds_weights = ds_weights if ds_weights is not None else [0.25, 0.5]
     
-    def forward(self, logits: torch.Tensor, targets: torch.Tensor):
-        
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        if targets.dtype != torch.float32:
+            targets = targets.float()
+
         if isinstance(logits, tuple):
             main_logits, ds_logits = logits
             all_logits = ds_logits + [main_logits]
-            ds_w = self.ds_weights
-            all_weights = ds_w + [1.0]  # Main prediction always gets 1.0.
+            all_weights = self.ds_weights + [1.0]  # Main prediction always gets 1.0.
         else:
             all_logits = [logits]
             all_weights = [1.0]
 
-        total_loss = 0
-        for p, w in zip(all_logits, all_weights):
-            if targets.shape[-1] != p.shape[-1]:
-                targets_resized = F.interpolate(targets, size=p.shape[-1], mode='nearest')
+        total_loss = 0.0
+        target_len = targets.shape[-1]
+
+        for d, w in zip(all_logits, all_weights):
+            if d.shape[-1] != target_len:
+                d_resized = F.interpolate(d, size=target_len, mode='nearest')
             else:
-                targets_resized = targets
+                d_resized = d
             
-            bce_loss = self.bce(p, targets_resized)
-            dice_loss = self.dice(p, targets_resized)
+            bce_loss = self.bce(d_resized, targets)
+            dice_loss = self.dice(d_resized, targets)
             total_loss += w * (self.bce_weight * bce_loss + self.dice_weight * dice_loss)
             
         return total_loss / sum(all_weights)
