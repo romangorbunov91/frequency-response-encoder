@@ -176,14 +176,27 @@ class _TransformerBottleneck_model(nn.Module):
         super(_TransformerBottleneck_model, self).__init__()
         
         self.deep_supervision = deep_supervision
-        self.input_conv = nn.Conv1d(
+        self.input_conv = nn.Sequential(
+            nn.Conv1d(
                 in_channels=in_channels,
                 out_channels=features[0],
-                kernel_size=5,
+                kernel_size=3,
                 stride=1,
-                padding=2,
+                padding=1,
+                bias=False
+                ),
+            nn.GroupNorm(
+                num_groups=1,
+                num_channels=features[0]),
+            nn.Conv1d(
+                in_channels=in_channels,
+                out_channels=features[0],
+                kernel_size=3,
+                stride=1,
+                padding=1,
                 bias=False
                 )
+        )
         # Encoder.
         self.enc1 = ResConvBlock(features[0], features[1])
         self.enc2 = ResConvBlock(features[1], features[2])
