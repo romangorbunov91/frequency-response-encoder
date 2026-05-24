@@ -199,7 +199,7 @@ class ModelTrainer(MetricsHistory):
         self.loss_func = CombinedLoss(
             bce_weight=self.bce_weight,
             dice_weight=self.dice_weight,
-            ds_weights=[0.25, 0.5]
+            ds_weights=self.configer.model_config['ds_weights']
             ).to(self.device)
         
         mdl_input_size = self.configer.model_config['input_size']

@@ -21,6 +21,7 @@ def build_output_dict(
             "mask_threshold": configer.model_config["mask_threshold"],
             "bce_weight": configer.model_config["bce_weight"],
             "dice_weight": configer.model_config["dice_weight"],
+            "ds_weights": configer.model_config["ds_weights"],
             "param_count": model_param_count,
         },
         "dataset": {

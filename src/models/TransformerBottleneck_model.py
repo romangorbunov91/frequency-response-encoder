@@ -176,31 +176,19 @@ class _TransformerBottleneck_model(nn.Module):
         super(_TransformerBottleneck_model, self).__init__()
         
         self.deep_supervision = deep_supervision
-        self.input_conv = nn.Sequential(
-            nn.Conv1d(
+        self.input_conv = nn.Conv1d(
                 in_channels=in_channels,
                 out_channels=features[0],
-                kernel_size=3,
+                kernel_size=5,
                 stride=1,
-                padding=1,
-                bias=False
-                ),
-            nn.GroupNorm(
-                num_groups=1,
-                num_channels=features[0]),
-            nn.Conv1d(
-                in_channels=in_channels,
-                out_channels=features[0],
-                kernel_size=3,
-                stride=1,
-                padding=1,
+                padding=2,
                 bias=False
                 )
-        )
         # Encoder.
-        self.enc1 = ResConvBlock(features[0], features[1])
-        self.enc2 = ResConvBlock(features[1], features[2])
-        self.enc3 = ResConvBlock(features[2], features[3])
+        self.enc1 = ResConvBlock(features[0], features[0])
+        self.enc2 = ResConvBlock(features[0], features[1])
+        self.enc3 = ResConvBlock(features[1], features[2])
+        self.enc4 = ResConvBlock(features[2], features[3])
         self.pool = nn.MaxPool1d(kernel_size=2)
 
         # Bottleneck: Project to higher dim + Global Transformer.
@@ -222,21 +210,25 @@ class _TransformerBottleneck_model(nn.Module):
             dropout=0.1)
 
         # Decoder with Attention Gated Skip Connections.
-        self.up3 = UpSample(features[4], features[3])
-        self.att3 = AttentionGate(features[3], features[3], features[3]//2)
-        self.dec3 = ResConvBlock(features[3]*2, features[3])
+        self.up4 = UpSample(features[4], features[3])
+        self.att4 = AttentionGate(features[3], features[3], features[3]//2)
+        self.dec4 = ResConvBlock(features[3]*2, features[3])
 
-        self.up2 = UpSample(features[3], features[2])
-        self.att2 = AttentionGate(features[2], features[2], features[2]//2)
-        self.dec2 = ResConvBlock(features[2]*2, features[2])
+        self.up3 = UpSample(features[3], features[2])
+        self.att3 = AttentionGate(features[2], features[2], features[2]//2)
+        self.dec3 = ResConvBlock(features[2]*2, features[2])
 
-        self.up1 = UpSample(features[2], features[1])
-        self.att1 = AttentionGate(features[1], features[1], features[1]//2)
-        self.dec1 = ResConvBlock(features[1]*2, features[1])
+        self.up2 = UpSample(features[2], features[1])
+        self.att2 = AttentionGate(features[1], features[1], features[1]//2)
+        self.dec2 = ResConvBlock(features[1]*2, features[1])
+
+        self.up1 = UpSample(features[1], features[0])
+        self.att1 = AttentionGate(features[0], features[0], features[0]//2)
+        self.dec1 = ResConvBlock(features[0]*2, features[0])
 
         # Prediction Heads
         self.final_conv = nn.Conv1d(
-            in_channels=features[1],
+            in_channels=features[0],
             out_channels=out_channels,
             kernel_size=1)
         self.ds_convs = nn.ModuleList([
@@ -247,6 +239,10 @@ class _TransformerBottleneck_model(nn.Module):
             nn.Conv1d(
                 in_channels=features[2],
                 out_channels=out_channels,
+                kernel_size=1),
+            nn.Conv1d(
+                in_channels=features[1],
+                out_channels=out_channels,
                 kernel_size=1)
         ])
 
@@ -255,12 +251,16 @@ class _TransformerBottleneck_model(nn.Module):
         e1 = self.enc1(self.input_conv(x))
         e2 = self.enc2(self.pool(e1))
         e3 = self.enc3(self.pool(e2))
+        e4 = self.enc4(self.pool(e3))
 
         # Bottleneck
-        b = self.bottleneck_attn(self.bottleneck_proj(self.pool(e3)))
+        b = self.bottleneck_attn(self.bottleneck_proj(self.pool(e4)))
 
         # Decoder
-        g3 = self.up3(b)
+        g4 = self.up4(b)
+        d4 = self.dec4(torch.cat([g4, self.att4(g4, e4)], dim=1))
+
+        g3 = self.up3(d4)
         d3 = self.dec3(torch.cat([g3, self.att3(g3, e3)], dim=1))
 
         g2 = self.up2(d3)
@@ -273,8 +273,9 @@ class _TransformerBottleneck_model(nn.Module):
 
         if self.training and self.deep_supervision:
             ds_outs = [
-                self.ds_convs[0](d3),
-                self.ds_convs[1](d2)
+                self.ds_convs[0](d4),
+                self.ds_convs[1](d3),
+                self.ds_convs[2](d2)
             ]
             return out_main, ds_outs
         return out_main

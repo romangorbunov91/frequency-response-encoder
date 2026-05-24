@@ -11,30 +11,28 @@ def rmse_complex(
 ) -> float:
 
     if response_ref.shape[0] != 3 or response_in.shape[0] != 3:
-        raise ValueError("Both inputs must be of shape (3, N)")
+        raise ValueError("Both inputs must be of shape (3, N)!!!")
         
     if Nlim is None:
         Nlim = [None, None]
     Nslice = slice(Nlim[0], Nlim[1])
+
+    freq   = response_in[0, Nslice]
+    mag_db = response_in[1, Nslice]
+    ph_deg = response_in[2, Nslice]
     
     freq_ref   = response_ref[0, Nslice]
     mag_db_ref = response_ref[1, Nslice]
     ph_deg_ref = response_ref[2, Nslice]
 
-    freq   = response_in[0, Nslice]
-    mag_db = response_in[1, Nslice]
-    ph_deg = response_in[2, Nslice]
-
-    mag_abs_ref = 10**(mag_db_ref / 20)
     mag_abs     = 10**(mag_db     / 20)
+    mag_abs_ref = 10**(mag_db_ref / 20)
     
-    complex_ref = mag_abs_ref * np.exp(1j*np.deg2rad(ph_deg_ref))
     complex_in  = mag_abs     * np.exp(1j*np.deg2rad(ph_deg    ))
+    complex_ref = mag_abs_ref * np.exp(1j*np.deg2rad(ph_deg_ref))
 
     # Interpolate real & imag separately to avoid phase-wrapping artifacts.
-    real_interp = np.interp(freq_ref, freq, complex_in.real)
-    imag_interp = np.interp(freq_ref, freq, complex_in.imag)
-    complex_interp = real_interp + 1j * imag_interp
+    complex_interp = np.interp(freq_ref, freq, complex_in.real) + 1j * np.interp(freq_ref, freq, complex_in.imag)
 
     RMSE = np.sqrt(np.mean(np.abs(complex_ref - complex_interp)**2))
 
@@ -50,7 +48,7 @@ def find_multipliers(fz: float, fd: float, err_rel_ref: float, Nmin: int, Nmax: 
     if R < 2:
         raise ValueError("fz must be < fd/2 for a valid solution.")
     
-    err_abs_ref = fz*err_rel_ref
+    err_abs_ref = fz * err_rel_ref
     Mmax = int(R / 2)
     N_vals = np.arange(Nmin, Nmax + 1, dtype=float)
     
@@ -80,7 +78,6 @@ def find_multipliers(fz: float, fd: float, err_rel_ref: float, Nmin: int, Nmax: 
             pos = np.argmin(err_abs)
             tol_flag_arr[mdx] = False
 
-        
         N_arr[mdx] = int(N_vals[pos])
         M_arr[mdx] = M
         L_arr[mdx] = int(L[pos])
