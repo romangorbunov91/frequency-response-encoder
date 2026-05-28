@@ -167,7 +167,7 @@ def plot_responses(
                     has_mask = True
                     ymin, ymax = ax.get_ylim()
                     ax.fill_between(x_data, ymin, ymax, where=regions[m_idx].astype(bool), 
-                            color=m_cfg['color'], alpha=0.25, label=m_cfg['label'])
+                            color=m_cfg['color'], alpha=0.25, label=m_cfg['label']+'_mask')
 
         # Mark masks.
         if zeros_poles_positions is not None:
@@ -257,7 +257,7 @@ def plot_multiple_responses(
         # Set title (on the first plot of the sample group only).
         if title is not None:
             if idx == 0:
-                ax.set_title(title, fontsize=plot_config['fontsize'], fontweight='bold')
+                ax.set_title(title, fontsize=plot_config['fontsize'])
             
         ax.set_xscale(cfg['xscale'])
 
