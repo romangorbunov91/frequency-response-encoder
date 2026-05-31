@@ -183,7 +183,7 @@ def plot_responses(
         # Set title (on the first plot of the sample group only).
         if title is not None:
             if idx == 0:
-                ax.set_title(title, fontsize=plot_config['fontsize'], fontweight='bold')
+                ax.set_title(title, fontsize=plot_config['fontsize'])
             
         ax.set_xscale(cfg['xscale'])
 
