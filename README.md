@@ -5,7 +5,7 @@
 Модель основана на архитектуре энкодер-декодер, состоящей из $N$-уровней и выполняющей преобразование ${C_{\text{in}}}$-канального тензора длины ${L_1}$ в ${C_{\text{out}}}$-канальный тензор той же длины:
 
 $$\begin{equation*}
-    \textbf{Y}: \, \mathbb{R}^{C_{\text{in}} \times L_1} \mapsto \mathbb{R}^{C_{\text{out}} \times L_1}.
+    \textbf{Y}: \quad \mathbb{R}^{C_{\text{in}} \times L_1} \mapsto \mathbb{R}^{C_{\text{out}} \times L_1}.
 \end{equation*}$$
 
 <p align="center" width="100%">
@@ -18,7 +18,7 @@ $$\begin{equation*}
 
 Архитектура модели приведена в [TransformerBottleneck_model.py](src/models/TransformerBottleneck_model.py).
 
-Лог обучения: в [TransformerBottleneck-model](src/train_logs/TransformerBottleneck-model.json).
+Лог обучения: в [TransformerBottleneck-model](train_logs/TransformerBottleneck-model.json).
 
 ## Даталоудер
 
@@ -29,14 +29,11 @@ $$\begin{equation*}
 
 Обучение реализовано в [train.py](src/train.py) в виде класса `ModelTrainer`.
 
-Гиперпараметры задаются в файле [customResNetUNet-config.json](src/config/TransformerBottleneck-model-config.json).
+Гиперпараметры задаются в файле [TransformerBottleneck-model-config.json](src/config/TransformerBottleneck-model-config.json).
 
-```
 ## Работа с проектом
 ### 1. Скачайте файлы репозитория
-### 2. Скачайте датасеты
-- [tiny-imagenet-200](https://disk.yandex.ru/d/adWo9fVCLuVQ0Q)
-- [moon-segmentation-binary](https://disk.yandex.ru/d/bJ6-fjDlVZBNfQ)
+### 2. Скачайте датасет [zeros-poles-masks](???)
 ### 3. Создайте окружение в директории `.venv`
 ```
 python -m venv .venv
@@ -68,3 +65,4 @@ python -m src.main --hypes src\config\TransformerBottleneck-model-config.json
 или
 ```
 python -m src.main hypes src\config\TransformerBottleneck-model-config.json --resume checkpoints\best_TransformerBottleneck-model.pth
+```
