@@ -10,8 +10,7 @@ $$\begin{equation*}
 
 <p align="center" width="100%">
   <img src="./readme_img/model_block_diagram.drawio.png"
-  style="background-color: white; padding: 0;
-  width="100%" />
+  style="background-color: white; padding: 0; width: 100%; height: auto; display: block; margin: 0 auto;" />
 </p>
 
 Количество обучаемых параметров построенной модели составляет порядка 5.3M.
