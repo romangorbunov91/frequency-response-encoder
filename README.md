@@ -32,16 +32,17 @@ $$\begin{equation*}
 
 ## Работа с проектом
 ### 1. Скачайте файлы репозитория
-### 2. Скачайте датасет [zeros-poles-masks](???)
-### 3. Создайте окружение в директории `.venv`
+### 2. Скачайте веса модели [best_TransformerBottleneck-model.pth](https://disk.yandex.ru/d/KbthwfIFpHOeFg)
+### 3. Скачайте датасет [zeros-poles-masks](https://disk.yandex.ru/d/4htkLTTQqykJRQ)
+### 4. Создайте окружение в директории `.venv`
 ```
 python -m venv .venv
 ```
-### 4. Активируйте окружение
+### 5. Активируйте окружение
 ```
 .venv\Scripts\activate
 ```
-### 5. Установите библиотеки
+### 6. Установите библиотеки
 ```
 pip install -r requirements.txt
 ```
