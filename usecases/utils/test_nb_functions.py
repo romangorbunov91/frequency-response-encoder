@@ -286,3 +286,25 @@ def plot_multiple_responses(
     
     plt.show()
     plt.close(fig)
+
+
+def transfer_function(
+    freq: List[float],
+    zero_poles: int,
+    poles: List[float],
+    zeros: List[float],
+    gain: Optional[float] = 1.0,
+    delay: Optional[float] = 0.0
+    ) -> List[float]:
+    
+    omega = 2*np.pi*freq
+    
+    gain_complex = gain / (1j * omega)**zero_poles * np.exp(-1j * omega * delay)
+        
+    for zero in zeros:
+        gain_complex *= 1.0 + 1j*freq/zero
+    
+    for pole in poles:
+        gain_complex /= 1.0 + 1j*freq/pole
+    
+    return gain_complex

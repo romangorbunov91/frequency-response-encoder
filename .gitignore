@@ -13,5 +13,6 @@
 !test_nb.ipynb
 !multipliers_test.ipynb
 !fr_test_nb.ipynb
+!fr_estim_nb.ipynb
 
 **/__pycache__/
