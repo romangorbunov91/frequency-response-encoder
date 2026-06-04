@@ -119,6 +119,7 @@ def zeros_poles_freq_to_positions(
 
     return positions_dict
 
+
 def plot_responses(
     plot_config: Dict[str, Any],
     data: np.ndarray,
@@ -215,6 +216,7 @@ def plot_responses(
     plt.show()
     plt.close(fig)
 
+
 def plot_multiple_responses(
     plot_config: Dict[str, Any],
     data_list: List[np.ndarray],
@@ -308,3 +310,68 @@ def transfer_function(
         gain_complex /= 1.0 + 1j*freq/pole
     
     return gain_complex
+
+
+def mask_postprocess(
+    mask: np.ndarray,
+    keys: List[str],
+    M: int
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Filters sequences of '1s' to keep only those with length >= M.
+    
+    Returns:
+        - Middle coordinates of the valid sequences (shape: (N, 2)).
+        - Filtered mask (same shape as input, dtype float32).
+        - Number of regions before filtering per channel (shape: (num_channels,)).
+        - Number of regions after filtering per channel (shape: (num_channels,)).
+    """
+    arr = np.array(mask, dtype=int)
+    positions_dict = {}
+    
+    # Initialize the filtered mask with zeros of the same shape.
+    mask_filtered = np.zeros_like(arr)
+    
+    # Lists to store counts per channel (row)
+    regions_before_per_channel = []
+    regions_after_per_channel = []
+    
+    for row_idx, key in enumerate(keys):
+        row = arr[row_idx]
+        positions = []
+        
+        # Pad with 0 at both ends to correctly catch sequences
+        # that start at index 0 or end at the last index.
+        padded = np.pad(row, (1, 1), constant_values=0)
+        
+        # Converts to 1 or -1.
+        diff = np.diff(padded)
+        
+        starts = np.where(diff == 1)[0]
+        ends = np.where(diff == -1)[0]
+        
+        # Count regions before filtering for this specific channel
+        regions_before_per_channel.append(len(starts))
+        
+        num_after = 0
+        for start, end in zip(starts, ends):
+            length = end - start
+            if length >= M:
+                mid_col = (start + end - 1) // 2
+                positions.append(mid_col)
+                
+                # Keep the valid sequence in the filtered mask.
+                mask_filtered[row_idx, start:end] = 1
+                num_after += 1
+                
+        # Count regions after filtering for this specific channel.
+        regions_after_per_channel.append(num_after)
+        
+        positions_dict[key] = np.array(positions, dtype=int)
+                
+    # Convert the per-channel lists to numpy arrays
+    regions_before_arr = np.array(regions_before_per_channel, dtype=int)
+    regions_after_arr = np.array(regions_after_per_channel, dtype=int)
+
+        
+    return positions_dict, np.array(mask_filtered, dtype=np.float32), regions_before_arr, regions_after_arr
