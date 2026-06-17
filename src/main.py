@@ -6,8 +6,8 @@ from pathlib import Path
 from datetime import datetime
 import argparse
 
-from train import ModelTrainer
-from utils.configer import Configer
+from src.train import ModelTrainer
+from src.utils.configer import Configer
 
 def set_seed(seed: int) -> None:
     random.seed(seed)

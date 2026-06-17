@@ -10,21 +10,17 @@ import torch.nn as nn
 torch.use_deterministic_algorithms(True)
 
 # Import Utils.
-from utils.metrics import AverageMeter, CombinedLoss, dice_coefficient, iou_score, pixel_accuracy
-from utils.debug_functions import visualize_predictions
-from utils.logging_functions import build_output_dict
+from src.utils.metrics import AverageMeter, CombinedLoss, dice_coefficient, iou_score, pixel_accuracy
+from src.utils.debug_functions import visualize_predictions
+from src.utils.logging_functions import build_output_dict
 
 # Import Datasets.
 from torch.utils.data import DataLoader
-from dataloaders.ZerosPolesDataset import TransformsConfig, ZerosPolesDataset, ConversionTransforms, GeneralTransforms
+from src.dataloaders.ZerosPolesDataset import TransformsConfig, ZerosPolesDataset, ConversionTransforms, GeneralTransforms
 
 # Import Model.
-from models.model_utilizer import load_net, update_optimizer, ModelUtilizer
-from models.parallelEncoder_model import parallelEncoder_model
-from models.hugeKernelEncoder_model import hugeKernelEncoder_model
-from models.deepEncoder_model import deepEncoder_model
-from models.UNetLike_model import UNetLike_model
-from models.TransformerBottleneck_model import TransformerBottleneck_model
+from src.models.model_utilizer import load_net, update_optimizer, ModelUtilizer
+from src.models.base_model import base_model
 
 # Setting seeds.
 def worker_init_fn(worker_id):
@@ -177,16 +173,8 @@ class ModelTrainer(MetricsHistory):
                 return_input=False
                 )]
 
-        if self.configer.model_config["model_name"] == 'parallelEncoder-model':
-            self.model_type = parallelEncoder_model
-        elif self.configer.model_config["model_name"] == 'hugeKernelEncoder-model':
-            self.model_type = hugeKernelEncoder_model
-        elif self.configer.model_config["model_name"] == 'deepEncoder-model':
-            self.model_type = deepEncoder_model
-        elif self.configer.model_config["model_name"] == 'UNetLike-model':
-            self.model_type = UNetLike_model
-        elif self.configer.model_config["model_name"] == 'TransformerBottleneck-model':
-            self.model_type = TransformerBottleneck_model
+        if self.configer.model_config["model_name"] == 'base-model':
+            self.model_type = base_model
 
         self.initialize_metrics(
             ['loss', 'dice', 'iou', 'accuracy'],

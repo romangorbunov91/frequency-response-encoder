@@ -165,7 +165,7 @@ class UpSample(nn.Module):
     def forward(self, x): return self.up(x)
 
 
-class _TransformerBottleneck_model(nn.Module):
+class _base_model(nn.Module):
 
     def __init__(self,
                 in_channels: int,
@@ -173,7 +173,7 @@ class _TransformerBottleneck_model(nn.Module):
                 features: List[int],
                 deep_supervision: bool=True
                 ):
-        super(_TransformerBottleneck_model, self).__init__()
+        super(_base_model, self).__init__()
         
         self.deep_supervision = deep_supervision
         self.input_conv = nn.Conv1d(
@@ -243,10 +243,6 @@ class _TransformerBottleneck_model(nn.Module):
             nn.Conv1d(
                 in_channels=features[1],
                 out_channels=out_channels,
-                kernel_size=1),
-            nn.Conv1d(
-                in_channels=features[0],
-                out_channels=out_channels,
                 kernel_size=1)
         ])
 
@@ -262,19 +258,15 @@ class _TransformerBottleneck_model(nn.Module):
 
         # Decoder
         g4 = self.up4(b)
-        #e4_up = F.interpolate(e4, size=g4.shape[-1], mode='linear', align_corners=False)
         d4 = self.dec4(torch.cat([g4, self.att4(g4, e4)], dim=1))
 
         g3 = self.up3(d4)
-        #e3_up = F.interpolate(e3, size=g3.shape[-1], mode='linear', align_corners=False)
         d3 = self.dec3(torch.cat([g3, self.att3(g3, e3)], dim=1))
 
         g2 = self.up2(d3)
-        #e2_up = F.interpolate(e2, size=g2.shape[-1], mode='linear', align_corners=False)
         d2 = self.dec2(torch.cat([g2, self.att2(g2, e2)], dim=1))
 
         g1 = self.up1(d2)
-        #e1_up = F.interpolate(e1, size=g1.shape[-1], mode='linear', align_corners=False)
         d1 = self.dec1(torch.cat([g1, self.att1(g1, e1)], dim=1))
 
         out_main = self.final_conv(d1)
@@ -283,18 +275,17 @@ class _TransformerBottleneck_model(nn.Module):
             ds_outs = [
                 self.ds_convs[0](d4),
                 self.ds_convs[1](d3),
-                self.ds_convs[2](d2),
-                self.ds_convs[3](d1)
+                self.ds_convs[2](d2)
             ]
             return out_main, ds_outs
         return out_main
 
-def TransformerBottleneck_model(
+def base_model(
     in_channels: int,
     out_channels: int,
     features: List[int]
     ):
-    return _TransformerBottleneck_model(
+    return _base_model(
         in_channels = in_channels,
         out_channels = out_channels,
         features = features

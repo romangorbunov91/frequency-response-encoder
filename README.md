@@ -15,7 +15,7 @@ $$\begin{equation*}
 
 Количество обучаемых параметров построенной модели составляет порядка 5.3M.
 
-Архитектура модели приведена в [TransformerBottleneck_model.py](src/models/TransformerBottleneck_model.py).
+Архитектура модели приведена в [base_model.py](src/models/base_model.py).
 
 Лог обучения: в [TransformerBottleneck-model](train_logs/TransformerBottleneck-model.json).
 
@@ -28,7 +28,7 @@ $$\begin{equation*}
 
 Обучение реализовано в [train.py](src/train.py) в виде класса `ModelTrainer`.
 
-Гиперпараметры задаются в файле [TransformerBottleneck-model-config.json](src/config/TransformerBottleneck-model-config.json).
+Гиперпараметры задаются в файле [base-model-config.json](src/config/base-model-config.json).
 
 ## Работа с проектом
 ### 1. Скачайте файлы репозитория
@@ -60,9 +60,9 @@ pip install -r requirements.txt
 Рекомендуется работать с моделью из терминала посредством [main.py](src/main.py).
 
 ```
-python -m src.main --hypes src\config\TransformerBottleneck-model-config.json
+python -m src.main --hypes src\config\base-model-config.json
 ```
 или
 ```
-python -m src.main hypes src\config\TransformerBottleneck-model-config.json --resume checkpoints\best_TransformerBottleneck-model.pth
+python -m src.main hypes src\config\base-model-config.json --resume checkpoints\best_TransformerBottleneck-model.pth
 ```
