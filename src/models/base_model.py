@@ -52,7 +52,6 @@ class ResConvBlock(nn.Module):
         return self.conv(x) + self.skip(x)
 
 class AttentionGate(nn.Module):
-    """Attention Gate for Skip Connections (Attention U-Net style)"""
     def __init__(
         self,
         F_g: int,
@@ -99,7 +98,6 @@ class AttentionGate(nn.Module):
         return x * psi
 
 class TransformerBottleneck(nn.Module):
-    """Lightweight Transformer for Global Context Modeling"""
     def __init__(
         self,
         channels: int,
@@ -141,7 +139,6 @@ class TransformerBottleneck(nn.Module):
         return x + mlp_out
 
 class UpSample(nn.Module):
-    """Artifact-free Upsampling: Interpolation + Conv"""
     def __init__(
         self,
         in_channels: int,
