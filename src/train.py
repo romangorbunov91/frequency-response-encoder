@@ -226,20 +226,23 @@ class ModelTrainer(MetricsHistory):
         shuffle_generator.manual_seed(self.configer.general_config['seed'])
 
         if bool(self.configer.model_config['scheduler_on']):
-            
-            self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=20, eta_min=1e-7)
-            '''
-            # Set scheduler.
-            self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                self.optimizer, 
-                mode='max',
-                factor=0.9,
-                patience=self.configer.model_config['scheduler_patience']
-            )
-            '''
+            if self.configer.model_config['scheduler_type'] == "CosineAnnealingLR":
+                self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                    self.optimizer,
+                    T_max=self.configer.model_config['scheduler_T_max'],
+                    eta_min=self.configer.model_config['scheduler_eta_min']
+                    )
+            elif self.configer.model_config['scheduler_type'] == "CosineAnnealingWarmRestarts":
+                self.scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(self.optimizer, 
+                                            T_0 = self.configer.model_config['scheduler_T_0'],
+                                            T_mult = self.configer.model_config['scheduler_T_mult'],
+                                            eta_min = self.configer.model_config['scheduler_eta_min'])
+            else:
+                raise NotImplementedError(f"Scheduler not supported: {self.configer.model_config['scheduler_type']}")
+
             if sched_dict is not None:
                 self.scheduler.load_state_dict(sched_dict)
-            print("Scheduler ON")
+            print(f"Scheduler ON: {self.configer.model_config['scheduler_type']}")
         
         self.model_size = sum(p.numel() for p in self.net.parameters() if p.requires_grad)
         print(f"Model parameters: {self.model_size}")

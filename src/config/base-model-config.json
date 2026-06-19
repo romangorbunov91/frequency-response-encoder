@@ -19,5 +19,9 @@
   "batch_size": 360,
   "epochs": 5000,
   "scheduler_on": true,
-  "scheduler_patience": 30
+  "scheduler_type": "CosineAnnealingLR",
+  "scheduler_eta_min": 0.00000001,
+  "scheduler_T_max": 20,
+  "scheduler_T_0": 20,
+  "scheduler_T_mult": 1
 }
