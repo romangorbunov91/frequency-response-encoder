@@ -1,8 +1,8 @@
 # Модель алгоритма идентификации параметров по частотным характеристикам
 
-## Архитектура модели
+## Архитектура модели сегментации
 
-Модель основана на архитектуре энкодер-декодер, состоящей из $N$-уровней и выполняющей преобразование ${C_{\text{in}}}$-канального тензора длины ${L_1}$ в ${C_{\text{out}}}$-канальный тензор той же длины:
+Модель основана на архитектуре энкодер-декодер, состоящей из $N$ уровней и выполняющей преобразование ${C_{\text{in}}}$-канального тензора длины ${L_1}$ в ${C_{\text{out}}}$-канальный тензор той же длины:
 
 $$\begin{equation*}
     \textbf{Y}: \quad \mathbb{R}^{C_{\text{in}} \times L_1} \mapsto \mathbb{R}^{C_{\text{out}} \times L_1}.
@@ -13,11 +13,11 @@ $$\begin{equation*}
   style="background-color: white; padding: 0; width: 100%; height: auto; display: block; margin: 0 auto;" />
 </p>
 
-Количество обучаемых параметров построенной модели составляет порядка 5.3M.
+Количество обучаемых параметров построенной модели сегментации составляет порядка 5.3M.
 
-Архитектура модели приведена в [base_model.py](src/models/base_model.py).
+Архитектура модели сегментации приведена в [base_model.py](src/models/base_model.py).
 
-Лог обучения: в [TransformerBottleneck-model](train_logs/TransformerBottleneck-model.json).
+Лог обучения -- в [TransformerBottleneck-model](train_logs/TransformerBottleneck-model.json).
 
 ## Даталоудер
 
