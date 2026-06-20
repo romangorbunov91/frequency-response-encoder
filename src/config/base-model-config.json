@@ -20,7 +20,7 @@
   "epochs": 5000,
   "scheduler_on": true,
   "scheduler_type": "CosineAnnealingLR",
-  "scheduler_eta_min": 0.00000001,
+  "scheduler_eta_min": 0.0000001,
   "scheduler_T_max": 20,
   "scheduler_T_0": 20,
   "scheduler_T_mult": 1,
