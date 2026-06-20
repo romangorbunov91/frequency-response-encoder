@@ -23,5 +23,6 @@
   "scheduler_eta_min": 0.00000001,
   "scheduler_T_max": 20,
   "scheduler_T_0": 20,
-  "scheduler_T_mult": 1
+  "scheduler_T_mult": 1,
+  "scheduler_warmup_steps": 1000
 }
