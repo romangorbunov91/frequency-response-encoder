@@ -37,7 +37,7 @@ class WarmupInvRsqrtLR(torch.optim.lr_scheduler._LRScheduler):
     
 
 
-class WarmupCosineAnnealingLR(torch.optim.lr_scheduler_LRScheduler):
+class WarmupCosineAnnealingLR(torch.optim.lr_scheduler._LRScheduler):
     """Планировщик с линейным прогревом и косинусным затуханием."""
 
     def __init__(self, optimizer, lr_max: float, warmup_steps: int, total_steps: int, 
@@ -75,7 +75,7 @@ class WarmupCosineAnnealingLR(torch.optim.lr_scheduler_LRScheduler):
         return [self.current_rate() for _ in self.optimizer.param_groups]
 
 
-class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler_LRScheduler):
+class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler._LRScheduler):
     """Планировщик с линейным прогревом и косинусными рестартами.
     
     После warmup начинается первый косинусный цикл длиной T_0.
@@ -134,7 +134,7 @@ class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler_LRScheduler):
         return [self.current_rate() for _ in self.optimizer.param_groups]
     
 
-class WarmupCosineDecayLR(torch.optim.lr_scheduler_LRScheduler):
+class WarmupCosineDecayLR(torch.optim.lr_scheduler._LRScheduler):
     """Планировщик с линейным прогревом и асимптотическим косинусным затуханием.
     
     После warmup LR уменьшается по косинусной кривой, асимптотически приближаясь к eta_min.
