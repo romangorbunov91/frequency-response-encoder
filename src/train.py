@@ -13,6 +13,7 @@ torch.use_deterministic_algorithms(True)
 from src.utils.metrics import AverageMeter, CombinedLoss, dice_coefficient, iou_score, pixel_accuracy
 from src.utils.debug_functions import visualize_predictions
 from src.utils.logging_functions import build_output_dict
+from src.utils.schedulers import WarmupInvRsqrtLR
 
 # Import Datasets.
 from torch.utils.data import DataLoader
@@ -233,10 +234,16 @@ class ModelTrainer(MetricsHistory):
                     eta_min=self.configer.model_config['scheduler_eta_min']
                     )
             elif self.configer.model_config['scheduler_type'] == "CosineAnnealingWarmRestarts":
-                self.scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(self.optimizer, 
-                                            T_0 = self.configer.model_config['scheduler_T_0'],
-                                            T_mult = self.configer.model_config['scheduler_T_mult'],
-                                            eta_min = self.configer.model_config['scheduler_eta_min'])
+                self.scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+                    self.optimizer, 
+                    T_0 = self.configer.model_config['scheduler_T_0'],
+                    T_mult = self.configer.model_config['scheduler_T_mult'],
+                    eta_min = self.configer.model_config['scheduler_eta_min'])
+            elif self.configer.model_config['scheduler_type'] == "WarmupInvRsqrtLR":
+                self.scheduler = WarmupInvRsqrtLR(
+                    self.optimizer,
+                    lr_max=self.configer.model_config['base_lr'],
+                    warmup_steps=self.configer.model_config['scheduler_warmup_steps'])
             else:
                 raise NotImplementedError(f"Scheduler not supported: {self.configer.model_config['scheduler_type']}")
 
@@ -453,14 +460,15 @@ class ModelTrainer(MetricsHistory):
         for n in range(self.configer['epochs']):
             print("Starting epoch {} of {}.".format(self.epoch + 1, self.configer['epochs'] + self.epoch_init))
             self.__train()
-            val_return = self.__val()
-            self.__test()
             
             if self.scheduler is not None:
                 #self.scheduler.step(self.metrics[self.configer.model_config["checkpoints_metric"]]['val'].avg)
                 self.scheduler.step()
                 print('lr_0:', self.optimizer.param_groups[0]["lr"])
                 #print('lr_1:', self.optimizer.param_groups[1]["lr"])
+
+            val_return = self.__val()
+            self.__test()
 
             self.log_epoch_history(['train', 'val', 'test'])
             self.print_metrics(['train', 'val', 'test'])
