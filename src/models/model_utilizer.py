@@ -77,6 +77,34 @@ def update_optimizer(
     else:
         raise NotImplementedError(f"Optimizer: {optim} is not valid.") 
 
+def update_optimizer_simple(
+        net: nn.Module,
+        optim: str,
+        lr: float,
+        decay: float
+    ):
+        
+    if optim == "Adam":
+        return torch.optim.Adam(net.parameters(), lr=lr, weight_decay=decay)
+
+    elif optim == "AdamW":
+        return torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=decay)
+
+    elif optim == "RMSProp":
+        return torch.optim.RMSprop(net.parameters(), lr=lr, weight_decay=decay)
+    
+    else:
+        raise NotImplementedError(f"Optimizer: {optim} is not valid.") 
+
+def update_optimizer_advanced(
+        net: nn.Module,
+        optim: str,
+        lr: float,
+        decay: float
+    ):
+        
+        raise NotImplementedError(f"Optimizer: {optim} is not valid.") 
+
 class ModelUtilizer(object):
     """Module utility class
 

@@ -20,9 +20,10 @@
   "epochs": 5000,
   "scheduler_on": true,
   "scheduler_type": "CosineAnnealingLR",
+  "scheduler_mode": "batch",
   "scheduler_eta_min": 0.0000001,
   "scheduler_T_max": 20,
   "scheduler_T_0": 20,
   "scheduler_T_mult": 1,
-  "scheduler_warmup_steps": 1000
+  "scheduler_warmup_epochs": 1000
 }

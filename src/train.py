@@ -13,7 +13,7 @@ torch.use_deterministic_algorithms(True)
 from src.utils.metrics import AverageMeter, CombinedLoss, dice_coefficient, iou_score, pixel_accuracy
 from src.utils.debug_functions import visualize_predictions
 from src.utils.logging_functions import build_output_dict
-from src.utils.schedulers import WarmupInvRsqrtLR
+from src.utils.schedulers import WarmupInvRsqrtLR, WarmupCosineDecayLR, WarmupCosineAnnealingLR, WarmupCosineAnnealingWarmRestarts
 
 # Import Datasets.
 from torch.utils.data import DataLoader
@@ -51,7 +51,6 @@ class MetricsHistory:
         self.train_history = {key: [] for key in history_keys}
         self.train_history["epoch"] = []
         self.train_history["lr"] = []
-        self.train_history["encoder_lr"] = []
     
     def print_metrics(self, phases):
         phase_keys = [phase.lower() for phase in phases]
@@ -83,10 +82,6 @@ class MetricsHistory:
         
         if hasattr(self, 'optimizer'):
             self.train_history["lr"].append(self.optimizer.param_groups[0]["lr"])
-            if len(self.optimizer.param_groups) > 1:
-                self.train_history["encoder_lr"].append(self.optimizer.param_groups[1]["lr"])
-            else:
-                self.train_history["encoder_lr"].append(None) 
         
         phase_keys = [phase.lower() for phase in phases]
         for name in self.metrics:
@@ -213,8 +208,7 @@ class ModelTrainer(MetricsHistory):
             net = self.net,
             optim = self.configer.model_config['solver_type'],
             lr = self.configer.model_config['base_lr'],
-            decay = self.configer.model_config['weight_decay'],
-            encoder_lr = self.configer.model_config['base_lr'],
+            decay = self.configer.model_config['weight_decay']
             )
         
         if optim_dict is None:
@@ -227,6 +221,18 @@ class ModelTrainer(MetricsHistory):
         shuffle_generator.manual_seed(self.configer.general_config['seed'])
 
         if bool(self.configer.model_config['scheduler_on']):
+            batch_size = self.configer.model_config['batch_size']
+            train_dataset_size = len(self.train_loader.dataset)
+            batch_num = train_dataset_size // batch_size
+            warmup_epochs = self.configer.model_config['scheduler_warmup_epochs']
+            
+            if self.configer.model_config['scheduler_mode'] == 'batch':
+                warmup_steps = batch_num * warmup_epochs
+            elif self.configer.model_config['scheduler_mode'] == 'epoch':
+                warmup_steps = warmup_epochs
+            else:
+                raise NotImplementedError(f"Scheduler MODE not supported: {self.configer.model_config['scheduler_mode']}")
+            
             if self.configer.model_config['scheduler_type'] == "CosineAnnealingLR":
                 self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                     self.optimizer,
@@ -238,12 +244,39 @@ class ModelTrainer(MetricsHistory):
                     self.optimizer, 
                     T_0 = self.configer.model_config['scheduler_T_0'],
                     T_mult = self.configer.model_config['scheduler_T_mult'],
-                    eta_min = self.configer.model_config['scheduler_eta_min'])
+                    eta_min = self.configer.model_config['scheduler_eta_min']
+                    )
             elif self.configer.model_config['scheduler_type'] == "WarmupInvRsqrtLR":
                 self.scheduler = WarmupInvRsqrtLR(
                     self.optimizer,
                     lr_max=self.configer.model_config['base_lr'],
-                    warmup_steps=self.configer.model_config['scheduler_warmup_steps'])
+                    warmup_steps=warmup_steps
+                    )
+            elif self.configer.model_config['scheduler_type'] == "WarmupCosineDecayLR":
+                self.scheduler = WarmupCosineDecayLR(
+                    self.optimizer,
+                    lr_max=self.configer.model_config['base_lr'],
+                    warmup_steps=warmup_steps,
+                    decay_rate=???,
+                    eta_min = self.configer.model_config['scheduler_eta_min']
+                    )
+            elif self.configer.model_config['scheduler_type'] == "WarmupCosineAnnealingLR":
+                self.scheduler = WarmupCosineAnnealingLR(
+                    self.optimizer,
+                    lr_max=self.configer.model_config['base_lr'],
+                    warmup_steps=warmup_steps,
+                    total_steps=???,
+                    eta_min = self.configer.model_config['scheduler_eta_min']
+                    )
+            elif self.configer.model_config['scheduler_type'] == "WarmupCosineAnnealingWarmRestarts":
+                self.scheduler = WarmupCosineAnnealingWarmRestarts(
+                    self.optimizer,
+                    lr_max=self.configer.model_config['base_lr'],
+                    warmup_steps=warmup_steps,
+                    T_0=self.configer.model_config['scheduler_T_0'],
+                    T_mult=self.configer.model_config['scheduler_T_mult'],
+                    eta_min = self.configer.model_config['scheduler_eta_min']
+                    )
             else:
                 raise NotImplementedError(f"Scheduler not supported: {self.configer.model_config['scheduler_type']}")
 
@@ -319,6 +352,8 @@ class ModelTrainer(MetricsHistory):
             loss.backward()
             nn.utils.clip_grad_norm_(self.net.parameters(), max_norm=1.0)
             self.optimizer.step()
+            if (self.scheduler is not None) and (self.configer.model_config['scheduler_mode'] == 'batch'):
+                self.scheduler.step()
 
             if isinstance(logits, tuple):
                 logits, _ = logits
@@ -462,10 +497,9 @@ class ModelTrainer(MetricsHistory):
             self.__train()
             
             if self.scheduler is not None:
-                #self.scheduler.step(self.metrics[self.configer.model_config["checkpoints_metric"]]['val'].avg)
-                self.scheduler.step()
                 print('lr_0:', self.optimizer.param_groups[0]["lr"])
-                #print('lr_1:', self.optimizer.param_groups[1]["lr"])
+                if self.configer.model_config['scheduler_mode'] == 'epoch':
+                    self.scheduler.step()
 
             val_return = self.__val()
             self.__test()

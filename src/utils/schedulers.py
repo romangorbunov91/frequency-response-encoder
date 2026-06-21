@@ -36,9 +36,54 @@ class WarmupInvRsqrtLR(torch.optim.lr_scheduler._LRScheduler):
         return [self.current_rate() for _ in self.optimizer.param_groups]
     
 
+class WarmupCosineDecayLR(torch.optim.lr_scheduler._LRScheduler):
+    """Планировщик с линейным прогревом и асимптотическим косинусным затуханием.
+    
+    После warmup LR уменьшается по косинусной кривой, асимптотически приближаясь к eta_min.
+    Не требует знания total_steps (в отличие от CosineAnnealingLR).
+    """
+
+    def __init__(self, optimizer, lr_max: float, warmup_steps: int, 
+                 decay_rate: float = 1.0, eta_min: float = 0.0, last_epoch: int = -1):
+        """
+        Args:
+            optimizer: Оптимизатор.
+            lr_max: Пиковая скорость обучения.
+            warmup_steps: Количество шагов для линейного прогрева.
+            decay_rate: Скорость затухания (больше = быстрее падает).
+            eta_min: Минимальная скорость обучения (асимптота).
+            last_epoch: Индекс последнего шага (для чекпоинтов).
+        """
+        self.lr_max = lr_max
+        self.warmup_steps = warmup_steps
+        self.decay_rate = decay_rate
+        self.eta_min = eta_min
+        super().__init__(optimizer, last_epoch)
+
+    def current_rate(self) -> float:
+        step = self.last_epoch
+        
+        # 1. Фаза линейного прогрева.
+        if step < self.warmup_steps:
+            factor = step / max(1, self.warmup_steps)
+            return self.eta_min + (self.lr_max - self.eta_min) * factor
+        
+        # 2. Фаза косинусного затухания (асимптотическая).
+        # Используем arctan для создания асимптотического прогресса от 0 до 1
+        cosine_step = step - self.warmup_steps
+        
+        # progress растет от 0 до 1 асимптотически (как arctan)
+        # decay_rate контролирует, как быстро достигается прогресс.
+        progress = math.atan(cosine_step * self.decay_rate / self.warmup_steps) / (math.pi / 2)
+        
+        # Косинусное затухание: от lr_max (progress=0) до eta_min (progress→1)
+        return self.eta_min + 0.5 * (self.lr_max - self.eta_min) * (1 + math.cos(math.pi * progress))
+
+    def get_lr(self):
+        return [self.current_rate() for _ in self.optimizer.param_groups]
 
 class WarmupCosineAnnealingLR(torch.optim.lr_scheduler._LRScheduler):
-    """Планировщик с линейным прогревом и косинусным затуханием."""
+    """Планировщик с линейным прогревом и косинусным изменением."""
 
     def __init__(self, optimizer, lr_max: float, warmup_steps: int, total_steps: int, 
                  eta_min: float = 0.0, last_epoch: int = -1):
@@ -76,7 +121,7 @@ class WarmupCosineAnnealingLR(torch.optim.lr_scheduler._LRScheduler):
 
 
 class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler._LRScheduler):
-    """Планировщик с линейным прогревом и косинусными рестартами.
+    """Планировщик с линейным прогревом, косинусным изменением и рестартами.
     
     После warmup начинается первый косинусный цикл длиной T_0.
     Каждый следующий цикл в T_mult раз длиннее предыдущего.
@@ -133,49 +178,3 @@ class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler._LRScheduler):
     def get_lr(self):
         return [self.current_rate() for _ in self.optimizer.param_groups]
     
-
-class WarmupCosineDecayLR(torch.optim.lr_scheduler._LRScheduler):
-    """Планировщик с линейным прогревом и асимптотическим косинусным затуханием.
-    
-    После warmup LR уменьшается по косинусной кривой, асимптотически приближаясь к eta_min.
-    Не требует знания total_steps (в отличие от CosineAnnealingLR).
-    """
-
-    def __init__(self, optimizer, lr_max: float, warmup_steps: int, 
-                 decay_rate: float = 1.0, eta_min: float = 0.0, last_epoch: int = -1):
-        """
-        Args:
-            optimizer: Оптимизатор.
-            lr_max: Пиковая скорость обучения.
-            warmup_steps: Количество шагов для линейного прогрева.
-            decay_rate: Скорость затухания (больше = быстрее падает).
-            eta_min: Минимальная скорость обучения (асимптота).
-            last_epoch: Индекс последнего шага (для чекпоинтов).
-        """
-        self.lr_max = lr_max
-        self.warmup_steps = warmup_steps
-        self.decay_rate = decay_rate
-        self.eta_min = eta_min
-        super().__init__(optimizer, last_epoch)
-
-    def current_rate(self) -> float:
-        step = self.last_epoch
-        
-        # 1. Фаза линейного прогрева.
-        if step < self.warmup_steps:
-            factor = step / max(1, self.warmup_steps)
-            return self.eta_min + (self.lr_max - self.eta_min) * factor
-        
-        # 2. Фаза косинусного затухания (асимптотическая).
-        # Используем arctan для создания асимптотического прогресса от 0 до 1
-        cosine_step = step - self.warmup_steps
-        
-        # progress растет от 0 до 1 асимптотически (как arctan)
-        # decay_rate контролирует, как быстро достигается прогресс.
-        progress = math.atan(cosine_step * self.decay_rate / self.warmup_steps) / (math.pi / 2)
-        
-        # Косинусное затухание: от lr_max (progress=0) до eta_min (progress→1)
-        return self.eta_min + 0.5 * (self.lr_max - self.eta_min) * (1 + math.cos(math.pi * progress))
-
-    def get_lr(self):
-        return [self.current_rate() for _ in self.optimizer.param_groups]
