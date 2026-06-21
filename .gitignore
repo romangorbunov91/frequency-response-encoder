@@ -15,5 +15,6 @@
 !fr_test_nb.ipynb
 !fr_estim_nb.ipynb
 !lr_nb.ipynb
+!scheduler_test_nb.ipynb
 
 **/__pycache__/
