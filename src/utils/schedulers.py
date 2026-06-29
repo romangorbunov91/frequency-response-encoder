@@ -4,7 +4,12 @@ import torch
 class WarmupInvRsqrtLR(torch.optim.lr_scheduler._LRScheduler):
     # Планировщик с линейным прогревом и обратным квадратным корнем.
     # На этапе прогрева LR растёт линейно до lr_max, затем убывает как 1/sqrt(step).
-    def __init__(self, optimizer, lr_max: float, warmup_steps: int, last_epoch: int = -1):
+    def __init__(self,
+        optimizer,
+        lr_max: float,
+        warmup_steps: int,
+        last_epoch: int = -1
+        ):
         """
         Args:
             optimizer: Оптимизатор, к которому привязывается планировщик.
@@ -19,17 +24,16 @@ class WarmupInvRsqrtLR(torch.optim.lr_scheduler._LRScheduler):
     def current_rate(self) -> float:
         step = self.last_epoch
         
-        # На шаге 0 возвращаем 0, чтобы избежать деления на ноль в decay_factor.
+        # Avoid division by zero in decay_factor.
         if step == 0:
             return 0.0
             
-        # Линейный прогрев: lr = lr_max * (step / warmup_steps).
+        # Linear warmup.
         warmup_factor = step / self._warmup_steps
         
-        # Обратный квадратный корень: lr = lr_max * sqrt(warmup_steps / step).
+        # Inv sqrt decay after warmup.
         decay_factor = math.sqrt(self._warmup_steps / step)
         
-        # Планировщик выбирает меньшее значение, создавая плавный переход в точке warmup_steps.
         return self._lr_max * min(warmup_factor, decay_factor)
 
     def get_lr(self):
@@ -177,4 +181,3 @@ class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler._LRScheduler):
 
     def get_lr(self):
         return [self.current_rate() for _ in self.optimizer.param_groups]
-    
