@@ -92,43 +92,6 @@ class WarmupCosineDecayLR(torch.optim.lr_scheduler._LRScheduler):
     def get_lr(self):
         return [self.current_rate() for _ in self.optimizer.param_groups]
 
-class WarmupCosineAnnealingLR(torch.optim.lr_scheduler._LRScheduler):
-    """Scheduler with linear warmup and cosine annealing."""
-
-    def __init__(self, optimizer, lr_max: float, warmup_steps: int, total_steps: int, 
-                 eta_min: float = 0.0, last_epoch: int = -1):
-        """
-        Args:
-            optimizer: The optimizer.
-            lr_max: Peak learning rate (reached at the end of warmup).
-            warmup_steps: Number of steps for linear warmup.
-            total_steps: Total number of training steps (warmup + cosine).
-            eta_min: Minimum learning rate (at the end of training).
-            last_epoch: Index of the last step (for checkpoints).
-        """
-        self.lr_max = lr_max
-        self.warmup_steps = warmup_steps
-        self.total_steps = total_steps
-        self.eta_min = eta_min
-        super().__init__(optimizer, last_epoch)
-
-    def current_rate(self) -> float:
-        step = self.last_epoch
-        
-        # 1. Linear warmup phase (from eta_min to lr_max)
-        if step < self.warmup_steps:
-            factor = step / max(1, self.warmup_steps)
-            return self.eta_min + (self.lr_max - self.eta_min) * factor
-            
-        # 2. Cosine decay phase (from lr_max to eta_min)
-        progress = (step - self.warmup_steps) / max(1, self.total_steps - self.warmup_steps)
-        progress = min(1.0, progress)  # Clamp in case step > total_steps
-        
-        return self.eta_min + 0.5 * (self.lr_max - self.eta_min) * (1.0 + math.cos(math.pi * progress))
-
-    def get_lr(self):
-        return [self.current_rate() for _ in self.optimizer.param_groups]
-
 
 class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler._LRScheduler):
     """Scheduler with linear warmup, cosine annealing, and warm restarts.
@@ -137,8 +100,17 @@ class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler._LRScheduler):
     Each subsequent cycle is T_mult times longer than the previous one.
     """
 
-    def __init__(self, optimizer, lr_max: float, warmup_steps: int, 
-                 T_0: int, T_mult: int = 1, eta_min: float = 0.0, last_epoch: int = -1):
+    def __init__(self,
+        optimizer,
+        restart_flag: bool,
+        lr_max: float,
+        warmup_steps: int,
+        T_0: int,
+        T_mult: int = 1,
+        eta_min: float = 0.0,
+        last_epoch: int = -1
+        ):
+        
         """
         Args:
             optimizer: The optimizer.
@@ -158,6 +130,11 @@ class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler._LRScheduler):
         # Step counter inside the current cosine cycle.
         self.T_cur = 0
         self.T_i = T_0  # Length of the current cycle.
+        
+        if restart_flag:
+            self.mult = 1.0
+        else:
+            self.mult = 2.0
         
         super().__init__(optimizer, last_epoch)
 
@@ -183,7 +160,7 @@ class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler._LRScheduler):
             T_i *= self.T_mult
         
         # Cosine formula (standard from PyTorch).
-        return self.eta_min + 0.5 * (self.lr_max - self.eta_min) * (1 + math.cos(math.pi * T_cur / T_i))
+        return self.eta_min + 0.5 * (self.lr_max - self.eta_min) * (1 + math.cos(self.mult * math.pi * T_cur / T_i))
 
     def get_lr(self):
         return [self.current_rate() for _ in self.optimizer.param_groups]
