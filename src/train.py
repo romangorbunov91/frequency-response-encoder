@@ -13,7 +13,7 @@ torch.use_deterministic_algorithms(True)
 from src.utils.metrics import AverageMeter, CombinedLoss, dice_coefficient, iou_score, pixel_accuracy
 from src.utils.debug_functions import visualize_predictions
 from src.utils.logging_functions import build_output_dict
-from src.utils.schedulers import WarmupInvRsqrtLR, WarmupCosineDecayLR, WarmupCosineAnnealingLR, WarmupCosineAnnealingWarmRestarts
+from src.utils.schedulers import WarmupInvRsqrtLR, WarmupCosineDecayLR, WarmupCosineAnnealingWarmRestarts
 
 # Import Datasets.
 from torch.utils.data import DataLoader
@@ -496,10 +496,9 @@ class ModelTrainer(MetricsHistory):
             print("Starting epoch {} of {}.".format(self.epoch + 1, self.configer['epochs'] + self.epoch_init))
             self.__train()
             
-            if self.scheduler is not None:
+            if (self.scheduler is not None) and (self.configer.model_config['scheduler_mode'] == 'epoch'):
                 print('lr_0:', self.optimizer.param_groups[0]["lr"])
-                if self.configer.model_config['scheduler_mode'] == 'epoch':
-                    self.scheduler.step()
+                self.scheduler.step()
 
             val_return = self.__val()
             self.__test()

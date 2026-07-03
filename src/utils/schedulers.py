@@ -94,20 +94,21 @@ class WarmupCosineDecayLR(torch.optim.lr_scheduler._LRScheduler):
 
 
 class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler._LRScheduler):
-    """Scheduler with linear warmup, cosine annealing, and warm restarts.
+    """Scheduler with linear warmup, cosine annealing.
     
-    After warmup, the first cosine cycle of length T_0 begins.
-    Each subsequent cycle is T_mult times longer than the previous one.
+    After warmup, the first cosine cycle of length 'T_0' begins.
+    Each subsequent cycle is 'T_mult' times longer than the previous one.
+    'restart_flag' controls whether the cosine cycles are warm-restarted (True) or continue (False).
     """
 
     def __init__(self,
         optimizer,
-        restart_flag: bool,
         lr_max: float,
         warmup_steps: int,
         T_0: int,
         T_mult: int = 1,
         eta_min: float = 0.0,
+        restart_flag: bool = True,
         last_epoch: int = -1
         ):
         
@@ -119,6 +120,7 @@ class WarmupCosineAnnealingWarmRestarts(torch.optim.lr_scheduler._LRScheduler):
             T_0: Length of the first cosine cycle (after warmup).
             T_mult: Cycle length multiplier (1 = constant length, 2 = doubling each time).
             eta_min: Minimum learning rate.
+            restart_flag: If True, each cosine cycle restarts from lr_max; if False, the cycles continue without restarting.
             last_epoch: Index of the last step (for checkpoints).
         """
         self.lr_max = lr_max
