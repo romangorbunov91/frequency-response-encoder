@@ -220,19 +220,7 @@ class ModelTrainer(MetricsHistory):
         shuffle_generator = torch.Generator()
         shuffle_generator.manual_seed(self.configer.general_config['seed'])
 
-        if bool(self.configer.model_config['scheduler_on']):
-            batch_size = self.configer.model_config['batch_size']
-            train_dataset_size = len(self.train_loader.dataset)
-            batch_num = train_dataset_size // batch_size
-            warmup_epochs = self.configer.model_config['scheduler_warmup_epochs']
-            
-            if self.configer.model_config['scheduler_mode'] == 'batch':
-                warmup_steps = batch_num * warmup_epochs
-            elif self.configer.model_config['scheduler_mode'] == 'epoch':
-                warmup_steps = warmup_epochs
-            else:
-                raise NotImplementedError(f"Scheduler MODE not supported: {self.configer.model_config['scheduler_mode']}")
-            
+        if bool(self.configer.model_config['scheduler_on']):            
             if self.configer.model_config['scheduler_type'] == "CosineAnnealingLR":
                 self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                     self.optimizer,
@@ -246,35 +234,38 @@ class ModelTrainer(MetricsHistory):
                     T_mult = self.configer.model_config['scheduler_T_mult'],
                     eta_min = self.configer.model_config['scheduler_eta_min']
                     )
-            elif self.configer.model_config['scheduler_type'] == "WarmupInvRsqrtLR":
-                self.scheduler = WarmupInvRsqrtLR(
+            elif self.configer.model_config['scheduler_type'] == "WarmupCosineAnnealing":
+                self.scheduler = WarmupCosineAnnealingWarmRestarts(
                     self.optimizer,
                     lr_max=self.configer.model_config['base_lr'],
-                    warmup_steps=warmup_steps
-                    )
-            elif self.configer.model_config['scheduler_type'] == "WarmupCosineDecayLR":
-                self.scheduler = WarmupCosineDecayLR(
-                    self.optimizer,
-                    lr_max=self.configer.model_config['base_lr'],
-                    warmup_steps=warmup_steps,
-                    decay_rate=???,
-                    eta_min = self.configer.model_config['scheduler_eta_min']
-                    )
-            elif self.configer.model_config['scheduler_type'] == "WarmupCosineAnnealingLR":
-                self.scheduler = WarmupCosineAnnealingLR(
-                    self.optimizer,
-                    lr_max=self.configer.model_config['base_lr'],
-                    warmup_steps=warmup_steps,
-                    total_steps=???,
-                    eta_min = self.configer.model_config['scheduler_eta_min']
+                    warmup_steps=self.configer.model_config['scheduler_warmup_steps'],
+                    T_0=self.configer.model_config['scheduler_T_0'],
+                    T_mult=self.configer.model_config['scheduler_T_mult'],
+                    eta_min = self.configer.model_config['scheduler_eta_min'],
+                    restart_flag=False
                     )
             elif self.configer.model_config['scheduler_type'] == "WarmupCosineAnnealingWarmRestarts":
                 self.scheduler = WarmupCosineAnnealingWarmRestarts(
                     self.optimizer,
                     lr_max=self.configer.model_config['base_lr'],
-                    warmup_steps=warmup_steps,
+                    warmup_steps=self.configer.model_config['scheduler_warmup_steps'],
                     T_0=self.configer.model_config['scheduler_T_0'],
                     T_mult=self.configer.model_config['scheduler_T_mult'],
+                    eta_min = self.configer.model_config['scheduler_eta_min'],
+                    restart_flag=True
+                    )
+            elif self.configer.model_config['scheduler_type'] == "WarmupInvRsqrtLR":
+                self.scheduler = WarmupInvRsqrtLR(
+                    self.optimizer,
+                    lr_max=self.configer.model_config['base_lr'],
+                    warmup_steps=self.configer.model_config['scheduler_warmup_steps']
+                    )
+            elif self.configer.model_config['scheduler_type'] == "WarmupCosineDecayLR":
+                self.scheduler = WarmupCosineDecayLR(
+                    self.optimizer,
+                    lr_max=self.configer.model_config['base_lr'],
+                    warmup_steps=self.configer.model_config['scheduler_warmup_steps'],
+                    decay_rate=self.configer.model_config['decay_rate'],
                     eta_min = self.configer.model_config['scheduler_eta_min']
                     )
             else:

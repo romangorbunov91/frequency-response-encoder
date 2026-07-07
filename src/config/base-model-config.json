@@ -25,5 +25,6 @@
   "scheduler_T_max": 100,
   "scheduler_T_0": 100,
   "scheduler_T_mult": 2,
+  "decay_rate": 0.1,
   "scheduler_warmup_steps": 200
 }
