@@ -60,7 +60,20 @@ if __name__ == "__main__":
    
     configer.device = configer.general_config.get("device").lower() if torch.cuda.is_available() else 'cpu'
     configer.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    configer.output_file_name = (f"{str(configer.model_config['model_name'])}")
+    
+    output_file_name = (f"{configer.model_config['model_name']}_"
+        f"features_{'_'.join(str(x) for x in configer.model_config['feature_list'])}_"
+        f"solver_{configer.model_config['solver_type']}_"
+        f"batch_{configer.model_config['batch_size']}_"
+        f"HW_{configer.model_config['mask_halfwindow']}_"
+        f"Wbce_{str(configer.model_config['bce_weight'])}_"
+        f"Wdice_{str(configer.model_config['dice_weight'])}_"
+        f"Wds_{'_'.join(str(x) for x in configer.model_config['ds_weights'])}_"
+        f"scheduler_{str(configer.model_config['scheduler_type'])}"
+        f"mode_{configer.model_config['scheduler_mode']}"
+        )
+    
+    configer.output_file_name = (output_file_name.replace('.', '_'))
     
     logs_dir = Path(configer.general_config["logs_dir"])
     logs_dir.mkdir(parents=True, exist_ok=True)

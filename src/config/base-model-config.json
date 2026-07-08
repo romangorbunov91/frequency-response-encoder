@@ -17,7 +17,7 @@
   "ds_weights": [0.125, 0.25, 0.5],
   "base_lr": 0.00001,
   "weight_decay": 0.0001,
-  "scheduler_type": null,
+  "scheduler_type": "WarmupInvRsqrtLR",
   "scheduler_mode": "epoch",
   "scheduler_warmup_steps": 200,
   "scheduler_T_max": 100,
