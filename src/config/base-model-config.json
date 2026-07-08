@@ -18,13 +18,12 @@
   "solver_type": "Adam",
   "batch_size": 360,
   "epochs": 5000,
-  "scheduler_on": true,
-  "scheduler_type": "CosineAnnealingLR",
+  "scheduler_type": null,
   "scheduler_mode": "epoch",
   "scheduler_eta_min": 0.0000001,
   "scheduler_T_max": 100,
   "scheduler_T_0": 100,
-  "scheduler_T_mult": 2,
-  "decay_rate": 0.1,
+  "scheduler_T_mult": 1,
+  "scheduler_decay_rate": 0.1,
   "scheduler_warmup_steps": 200
 }

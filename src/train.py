@@ -220,7 +220,7 @@ class ModelTrainer(MetricsHistory):
         shuffle_generator = torch.Generator()
         shuffle_generator.manual_seed(self.configer.general_config['seed'])
 
-        if bool(self.configer.model_config['scheduler_on']):            
+        if self.configer.model_config['scheduler_type'] is not None:
             if self.configer.model_config['scheduler_type'] == "CosineAnnealingLR":
                 self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                     self.optimizer,
@@ -266,7 +266,7 @@ class ModelTrainer(MetricsHistory):
                     self.optimizer,
                     lr_max=self.configer.model_config['base_lr'],
                     warmup_steps=self.configer.model_config['scheduler_warmup_steps'],
-                    decay_rate=self.configer.model_config['decay_rate'],
+                    decay_rate=self.configer.model_config['scheduler_decay_rate'],
                     eta_min=self.configer.model_config['scheduler_eta_min']
                     )
             else:
