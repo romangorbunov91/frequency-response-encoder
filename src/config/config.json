@@ -4,5 +4,6 @@
   "logs_dir": "./train_logs/",
   "score_dir": "./scores/",
   "device": "cuda",
+  "workers": 4,
   "seed": 1991
 }

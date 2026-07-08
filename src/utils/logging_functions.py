@@ -17,11 +17,6 @@ def build_output_dict(
             "model_name": configer.model_config["model_name"],
             "feature_list": configer.model_config["feature_list"],
             "input_size": configer.model_config["input_size"],
-            "mask_halfwindow": configer.model_config["mask_halfwindow"],
-            "mask_threshold": configer.model_config["mask_threshold"],
-            "bce_weight": configer.model_config["bce_weight"],
-            "dice_weight": configer.model_config["dice_weight"],
-            "ds_weights": configer.model_config["ds_weights"],
             "param_count": model_param_count,
         },
         "dataset": {
@@ -32,11 +27,34 @@ def build_output_dict(
             "val_size": val_size,
             "test_size": test_size,
         },
+        "training": {
+            "checkpoints_save_policy": configer.model_config["checkpoints_save_policy"],
+            "checkpoints_metric": configer.model_config["checkpoints_metric"],
+            "solver_type": configer.model_config.get("solver_type"),
+            "batch_size": configer.model_config.get("batch_size"),
+            "epochs": configer.model_config["epochs"],
+            "early_stop_number": configer.model_config["early_stop_number"],
+            "mask_halfwindow": configer.model_config["mask_halfwindow"],
+            "mask_threshold": configer.model_config["mask_threshold"],
+            "bce_weight": configer.model_config["bce_weight"],
+            "dice_weight": configer.model_config["dice_weight"],
+            "ds_weights": configer.model_config["ds_weights"],
+            "base_lr": configer.model_config["base_lr"],
+            "weight_decay": configer.model_config["weight_decay"],
+        },
+        "scheduler": {
+            "scheduler_type": configer.model_config.get("scheduler_type"),
+            "scheduler_mode": configer.model_config.get("scheduler_mode"),
+            "scheduler_warmup_steps": configer.model_config.get("scheduler_warmup_steps"),
+            "scheduler_T_max": configer.model_config.get("scheduler_T_max"),
+            "scheduler_T_0": configer.model_config.get("scheduler_T_0"),
+            "scheduler_T_mult": configer.model_config.get("scheduler_T_mult"),
+            "scheduler_eta_min": configer.model_config.get("scheduler_eta_min"),
+            "scheduler_decay_rate": configer.model_config.get("scheduler_decay_rate"),
+        },
         "device": configer.device,
-        "seed": configer.general_config.get("seed"),
         "workers": configer.model_config.get("workers"),
-        "batch_size": configer.model_config.get("batch_size"),
-        "solver_type": configer.model_config.get("solver_type")
+        "seed": configer.general_config.get("seed")
     }
 
     # Build train_log dynamically.
