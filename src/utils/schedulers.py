@@ -8,6 +8,7 @@ class WarmupInvRsqrtLR(torch.optim.lr_scheduler._LRScheduler):
         optimizer,
         lr_max: float,
         warmup_steps: int,
+        eta_min: float = 0.0,
         last_epoch: int = -1
         ):
         """
@@ -19,14 +20,15 @@ class WarmupInvRsqrtLR(torch.optim.lr_scheduler._LRScheduler):
         """
         self._lr_max = lr_max
         self._warmup_steps = warmup_steps
+        self.eta_min = eta_min
         super().__init__(optimizer, last_epoch=last_epoch)
 
     def current_rate(self) -> float:
         step = self.last_epoch
-        
+
         # Avoid division by zero in decay_factor.
         if step == 0:
-            return 0.0
+            return self.eta_min
             
         # Linear warmup.
         warmup_factor = step / self._warmup_steps
@@ -34,7 +36,7 @@ class WarmupInvRsqrtLR(torch.optim.lr_scheduler._LRScheduler):
         # Inv sqrt decay after warmup.
         decay_factor = math.sqrt(self._warmup_steps / step)
         
-        return self._lr_max * min(warmup_factor, decay_factor)
+        return self.eta_min + (self._lr_max - self.eta_min) * min(warmup_factor, decay_factor)
 
     def get_lr(self):
         return [self.current_rate() for _ in self.optimizer.param_groups]
@@ -75,8 +77,7 @@ class WarmupCosineDecayLR(torch.optim.lr_scheduler._LRScheduler):
         
         # 1. Linear warmup phase.
         if step < self.warmup_steps:
-            factor = step / max(1, self.warmup_steps)
-            return self.eta_min + (self.lr_max - self.eta_min) * factor
+            return self.eta_min + (self.lr_max - self.eta_min) * step / max(1, self.warmup_steps)
         
         # 2. Cosine decay phase (asymptotic).
         # Use arctan to create an asymptotic progress from 0 to 1.

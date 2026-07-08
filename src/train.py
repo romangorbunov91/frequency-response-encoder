@@ -258,7 +258,8 @@ class ModelTrainer(MetricsHistory):
                 self.scheduler = WarmupInvRsqrtLR(
                     self.optimizer,
                     lr_max=self.configer.model_config['base_lr'],
-                    warmup_steps=self.configer.model_config['scheduler_warmup_steps']
+                    warmup_steps=self.configer.model_config['scheduler_warmup_steps'],
+                    eta_min = self.configer.model_config['scheduler_eta_min']
                     )
             elif self.configer.model_config['scheduler_type'] == "WarmupCosineDecayLR":
                 self.scheduler = WarmupCosineDecayLR(
@@ -266,7 +267,7 @@ class ModelTrainer(MetricsHistory):
                     lr_max=self.configer.model_config['base_lr'],
                     warmup_steps=self.configer.model_config['scheduler_warmup_steps'],
                     decay_rate=self.configer.model_config['decay_rate'],
-                    eta_min = self.configer.model_config['scheduler_eta_min']
+                    eta_min=self.configer.model_config['scheduler_eta_min']
                     )
             else:
                 raise NotImplementedError(f"Scheduler not supported: {self.configer.model_config['scheduler_type']}")
