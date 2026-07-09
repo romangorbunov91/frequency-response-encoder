@@ -30,8 +30,8 @@ def build_output_dict(
         "training": {
             "checkpoints_save_policy": configer.model_config["checkpoints_save_policy"],
             "checkpoints_metric": configer.model_config["checkpoints_metric"],
-            "solver_type": configer.model_config.get("solver_type"),
-            "batch_size": configer.model_config.get("batch_size"),
+            "solver_type": configer.model_config["solver_type"],
+            "batch_size": configer.model_config["batch_size"],
             "epochs": configer.model_config["epochs"],
             "early_stop_number": configer.model_config["early_stop_number"],
             "mask_halfwindow": configer.model_config["mask_halfwindow"],
@@ -43,18 +43,18 @@ def build_output_dict(
             "weight_decay": configer.model_config["weight_decay"],
         },
         "scheduler": {
-            "scheduler_type": configer.model_config.get("scheduler_type"),
-            "scheduler_mode": configer.model_config.get("scheduler_mode"),
-            "scheduler_warmup_steps": configer.model_config.get("scheduler_warmup_steps"),
-            "scheduler_T_max": configer.model_config.get("scheduler_T_max"),
-            "scheduler_T_0": configer.model_config.get("scheduler_T_0"),
-            "scheduler_T_mult": configer.model_config.get("scheduler_T_mult"),
-            "scheduler_eta_min": configer.model_config.get("scheduler_eta_min"),
-            "scheduler_decay_rate": configer.model_config.get("scheduler_decay_rate"),
+            "scheduler_type": configer.model_config["scheduler_type"],
+            "scheduler_mode": configer.model_config["scheduler_mode"],
+            "scheduler_warmup_steps": configer.model_config["scheduler_warmup_steps"],
+            "scheduler_T_max": configer.model_config["scheduler_T_max"],
+            "scheduler_T_0": configer.model_config["scheduler_T_0"],
+            "scheduler_T_mult": configer.model_config["scheduler_T_mult"],
+            "scheduler_eta_min": configer.model_config["scheduler_eta_min"],
+            "scheduler_decay_rate": configer.model_config["scheduler_decay_rate"],
         },
         "device": configer.device,
-        "workers": configer.model_config.get("workers"),
-        "seed": configer.general_config.get("seed")
+        "workers": configer.general_config["workers"],
+        "seed": configer.general_config["seed"]
     }
 
     # Build train_log dynamically.
@@ -70,7 +70,7 @@ def build_output_dict(
         train_log.append(log_entry)
 
     # Summary: find best epoch based on monitored metric.
-    checkpoints_metric = configer.model_config.get("checkpoints_metric")
+    checkpoints_metric = configer.model_config["checkpoints_metric"]
     val_scores = np.array(train_history[f"val_{checkpoints_metric}"])
     best_epoch_idx = np.argmax(val_scores)
     best_epoch = train_history["epoch"][best_epoch_idx]

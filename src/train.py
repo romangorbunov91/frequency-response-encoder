@@ -291,7 +291,7 @@ class ModelTrainer(MetricsHistory):
                 batch_size=self.configer.model_config["batch_size"],
                 shuffle=True,
                 generator=shuffle_generator,
-                num_workers=self.configer.model_config["workers"],
+                num_workers=self.configer.general_config["workers"],
                 worker_init_fn=worker_init_fn,
                 pin_memory=True)
 
@@ -304,7 +304,7 @@ class ModelTrainer(MetricsHistory):
                     ), 
                 batch_size=self.configer.model_config["batch_size"],
                 shuffle=False,
-                num_workers=self.configer.model_config["workers"],
+                num_workers=self.configer.general_config["workers"],
                 pin_memory=True)
             
             self.test_loader = DataLoader(
@@ -316,7 +316,7 @@ class ModelTrainer(MetricsHistory):
                     ), 
                 batch_size=self.configer.model_config["batch_size"],
                 shuffle=False,
-                num_workers=self.configer.model_config["workers"],
+                num_workers=self.configer.general_config["workers"],
                 pin_memory=True)
             
         else:

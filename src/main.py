@@ -69,7 +69,7 @@ if __name__ == "__main__":
         f"Wbce_{str(configer.model_config['bce_weight'])}_"
         f"Wdice_{str(configer.model_config['dice_weight'])}_"
         f"Wds_{'_'.join(str(x) for x in configer.model_config['ds_weights'])}_"
-        f"scheduler_{str(configer.model_config['scheduler_type'])}"
+        f"scheduler_{str(configer.model_config['scheduler_type'])}_"
         f"mode_{configer.model_config['scheduler_mode']}"
         )
     
