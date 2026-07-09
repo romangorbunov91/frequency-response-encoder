@@ -5,5 +5,7 @@
   "score_dir": "./scores/",
   "device": "cuda",
   "workers": 4,
-  "seed": 1991
+  "seed": 1991,
+  "debug_num_samples": 4,
+  "debug_lr_graph": true
 }
