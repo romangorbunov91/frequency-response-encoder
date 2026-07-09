@@ -11,7 +11,7 @@ torch.use_deterministic_algorithms(True)
 
 # Import Utils.
 from src.utils.metrics import AverageMeter, CombinedLoss, dice_coefficient, iou_score, pixel_accuracy
-from src.utils.debug_functions import visualize_predictions
+from src.utils.debug_functions import visualize_predictions, print_terminal_graph
 from src.utils.logging_functions import build_output_dict
 from src.utils.schedulers import WarmupInvRsqrtLR, WarmupCosineDecayLR, WarmupCosineAnnealingWarmRestarts
 
@@ -81,7 +81,8 @@ class MetricsHistory:
             self.train_history["epoch"].append(self.epoch + 1)
         
         if hasattr(self, 'optimizer'):
-            self.train_history["lr"].append(self.optimizer.param_groups[0]["lr"])
+            self.train_history["lr"].append(self.lr_list)
+            #self.train_history["lr"].append(self.optimizer.param_groups[0]["lr"])
         
         phase_keys = [phase.lower() for phase in phases]
         for name in self.metrics:
@@ -344,8 +345,10 @@ class ModelTrainer(MetricsHistory):
             loss.backward()
             nn.utils.clip_grad_norm_(self.net.parameters(), max_norm=1.0)
             self.optimizer.step()
+            
             if (self.scheduler is not None) and (self.configer.model_config['scheduler_mode'] == 'batch'):
                 self.scheduler.step()
+                self.lr_list.append(self.optimizer.param_groups[0]["lr"])
 
             if isinstance(logits, tuple):
                 logits, _ = logits
@@ -457,47 +460,56 @@ class ModelTrainer(MetricsHistory):
                     )
         
         # START debug section.
-        num_samples = 4
-        batch_size = logits.shape[0]
-        random_indices = torch.randperm(batch_size)[:num_samples]
-        
-        rand_int = random_indices[0]
-        print('Prediction:', ((torch.sigmoid(logits[rand_int]) > self.mask_threshold).float()).sum(dim=1).detach())
-        print('Ground:    ', masks[rand_int].sum(dim=1).detach())
-        
-        logits = logits[random_indices]
-        masks = masks[random_indices]
-        
-        save_dir = Path(self.configer.general_config['score_dir']) / f"{self.configer.model_config['model_name']}_{self.configer.run_id}"
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir, exist_ok=True)
+        if self.configer.general_config['debug_num_samples'] > 0:
+            num_samples = self.configer.general_config['debug_num_samples']
+            batch_size = logits.shape[0]
+            random_indices = torch.randperm(batch_size)[:num_samples]
             
-        visualize_predictions(
-            logits_all=logits.detach(),
-            masks_all=masks.detach(),
-            dice_func=dice_coefficient,
-            iou_func=iou_score,
-            save_path=save_dir / f"{self.configer.model_config['model_name']}_{self.configer.run_id}_{self.epoch}.pdf",
-            threshold=self.mask_threshold
-            )
+            rand_int = random_indices[0]
+            print('Prediction:', ((torch.sigmoid(logits[rand_int]) > self.mask_threshold).float()).sum(dim=1).detach())
+            print('Ground:    ', masks[rand_int].sum(dim=1).detach())
+            
+            logits = logits[random_indices]
+            masks = masks[random_indices]
+            
+            save_dir = Path(self.configer.general_config['score_dir']) / f"{self.configer.model_config['model_name']}_{self.configer.run_id}"
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir, exist_ok=True)
+                
+            visualize_predictions(
+                logits_all=logits.detach(),
+                masks_all=masks.detach(),
+                dice_func=dice_coefficient,
+                iou_func=iou_score,
+                save_path=save_dir / f"{self.configer.model_config['model_name']}_{self.configer.run_id}_{self.epoch}.pdf",
+                threshold=self.mask_threshold
+                )
         # END debug section.
-        
+            
     def train(self) -> None:
-        
         for n in range(self.configer['epochs']):
             print("Starting epoch {} of {}.".format(self.epoch + 1, self.configer['epochs'] + self.epoch_init))
-            self.__train()
+            print('lr_0:', self.optimizer.param_groups[0]["lr"])
+            self.lr_list = [self.optimizer.param_groups[0]["lr"]]
             
-            if (self.scheduler is not None) and (self.configer.model_config['scheduler_mode'] == 'epoch'):
-                print('lr_0:', self.optimizer.param_groups[0]["lr"])
-                self.scheduler.step()
-
+            self.__train()
             val_return = self.__val()
             self.__test()
 
             self.log_epoch_history(['train', 'val', 'test'])
+            
+            if (self.scheduler is not None) and (self.configer.model_config['scheduler_mode'] == 'epoch'):
+                self.scheduler.step()
+
             self.print_metrics(['train', 'val', 'test'])
             self.reset_metrics()
+            
+            if self.configer.general_config['debug_lr_graph']:
+                print_terminal_graph(
+                    data=self.lr_list,
+                    title=f"Learning rate at epoch {self.epoch + 1}",
+                    num_lines=10
+                    )
 
             if val_return < 0:
                 print("Got no improvement for {} subsequent epochs. Finished epoch {}, than stopped."
