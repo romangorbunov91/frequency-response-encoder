@@ -69,3 +69,59 @@ def visualize_predictions(
         plt.savefig(save_path, format='pdf', bbox_inches='tight')
         print(f"Test scores saved to {save_path}")
     plt.close(fig)
+
+def print_terminal_graph(
+    data,
+    title: str,
+    num_lines: int=10
+    ):
+    
+    """Prints a multi-line ASCII sparkline graph to the terminal."""
+    if not data:
+        return
+    
+    blocks = '▁▂▃▄▅▆▇█'
+    min_val, max_val = min(data), max(data)
+    rng = max_val - min_val
+    
+    if title is not None:
+        print(f"{title} history:")
+    
+    print(f"max: {max_val}")
+        
+    if rng == 0:
+        # If all values are identical, draw a flatline at the bottom row.
+        for r in range(num_lines, 0, -1):
+            if r == 1:
+                print(blocks[0] * len(data))
+            else:
+                print(' ' * len(data))
+        return
+
+    # Calculate the height of each data point in "eighths".
+    # Total vertical resolution is now num_lines * 8.
+    max_eighths = num_lines * 8
+    heights = [
+        min(max_eighths, int((val - min_val) / rng * max_eighths))
+        for val in data
+    ]
+    
+    # Build and print the graph line by line, from top (num_lines) to bottom (1).
+    for r in range(num_lines, 0, -1):
+        line = []
+        threshold_bottom = (r - 1) * 8
+        threshold_top = r * 8
+        
+        for h in heights:
+            if h >= threshold_top:
+                # Full block.
+                line.append('█')       
+            elif h <= threshold_bottom:
+                # Empty space
+                line.append(' ')
+            else:
+                # Partial block (maps eighths 1-7 to blocks indices 0-6)
+                line.append(blocks[h - threshold_bottom - 1])
+                
+        print(''.join(line))
+    print(f"min: {min_val}")
