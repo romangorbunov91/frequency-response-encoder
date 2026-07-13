@@ -507,8 +507,8 @@ class ModelTrainer(MetricsHistory):
             if self.configer.general_config['debug_lr_graph']:
                 print_terminal_graph(
                     data=self.lr_list,
-                    title=f"Learning rate at epoch {self.epoch + 1}",
-                    num_lines=10
+                    title=f"{self.configer.model_config['scheduler_type']} at epoch {self.epoch + 1}",
+                    num_lines=8
                     )
 
             if val_return < 0:
