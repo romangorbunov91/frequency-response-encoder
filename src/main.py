@@ -62,8 +62,8 @@ if __name__ == "__main__":
     configer.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     output_file_name = (f"{configer.model_config['model_name']}_"
-        f"features_{'_'.join(str(x) for x in configer.model_config['feature_list'])}_"
-        f"solver_{configer.model_config['solver_type']}_"
+        f"{'_'.join(str(x) for x in configer.model_config['feature_list'])}_"
+        f"{configer.model_config['solver_type']}_"
         f"batch_{configer.model_config['batch_size']}_"
         f"HW_{configer.model_config['mask_halfwindow']}_"
         f"Wbce_{str(configer.model_config['bce_weight'])}_"
