@@ -7,5 +7,6 @@
   "workers": 4,
   "seed": 1991,
   "debug_num_samples": 4,
-  "debug_lr_graph": true
+  "debug_terminal_graph_lines": 8,
+  "debug_lr_log": true
 }

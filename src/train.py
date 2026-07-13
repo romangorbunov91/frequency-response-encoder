@@ -81,8 +81,7 @@ class MetricsHistory:
             self.train_history["epoch"].append(self.epoch + 1)
         
         if hasattr(self, 'optimizer'):
-            self.train_history["lr"].append(self.lr_list)
-            #self.train_history["lr"].append(self.optimizer.param_groups[0]["lr"])
+            self.train_history["lr"].append(self.optimizer.param_groups[0]["lr"])
         
         phase_keys = [phase.lower() for phase in phases]
         for name in self.metrics:
@@ -180,6 +179,9 @@ class ModelTrainer(MetricsHistory):
         
     def init_model(self):
         """Initialize model and other data for procedure"""
+        
+        if self.configer.general_config['debug_lr_log']:
+            self.lr_debug_history = {key: [] for key in ["epoch", "lr"]}
         
         self.loss_func = CombinedLoss(
             bce_weight=self.bce_weight,
@@ -347,8 +349,8 @@ class ModelTrainer(MetricsHistory):
             self.optimizer.step()
             
             if (self.scheduler is not None) and (self.configer.model_config['scheduler_mode'] == 'batch'):
-                self.scheduler.step()
                 self.lr_list.append(self.optimizer.param_groups[0]["lr"])
+                self.scheduler.step()
 
             if isinstance(logits, tuple):
                 logits, _ = logits
@@ -489,8 +491,10 @@ class ModelTrainer(MetricsHistory):
     def train(self) -> None:
         for n in range(self.configer['epochs']):
             print("Starting epoch {} of {}.".format(self.epoch + 1, self.configer['epochs'] + self.epoch_init))
-            print('lr_0:', self.optimizer.param_groups[0]["lr"])
-            self.lr_list = [self.optimizer.param_groups[0]["lr"]]
+            print('Learning rate:', self.optimizer.param_groups[0]["lr"])
+            
+            # Reset learning rate list for this epoch.
+            self.lr_list = []
             
             self.__train()
             val_return = self.__val()
@@ -499,16 +503,17 @@ class ModelTrainer(MetricsHistory):
             self.log_epoch_history(['train', 'val', 'test'])
             
             if (self.scheduler is not None) and (self.configer.model_config['scheduler_mode'] == 'epoch'):
+                self.lr_list = [self.optimizer.param_groups[0]["lr"]]
                 self.scheduler.step()
 
             self.print_metrics(['train', 'val', 'test'])
             self.reset_metrics()
             
-            if self.configer.general_config['debug_lr_graph']:
+            if self.configer.general_config['debug_terminal_graph_lines'] > 0:
                 print_terminal_graph(
                     data=self.lr_list,
                     title=f"{self.configer.model_config['scheduler_type']} at epoch {self.epoch + 1}",
-                    num_lines=8
+                    num_lines=self.configer.general_config['debug_terminal_graph_lines']
                     )
 
             if val_return < 0:
@@ -516,8 +521,6 @@ class ModelTrainer(MetricsHistory):
                       .format(self.configer.model_config["early_stop_number"], self.epoch_init + n+1))
                 break
             
-            self.epoch += 1
-
             output_dict = build_output_dict(
                 configer=self.configer,
                 train_history=self.train_history,
@@ -529,3 +532,13 @@ class ModelTrainer(MetricsHistory):
             
             with open(Path(self.configer.general_config["logs_dir"]) / (self.configer.output_file_name + '.json'), "w") as f:
                 json.dump(output_dict, f, indent=4)
+            
+            if self.configer.general_config['debug_lr_log']:
+                
+                self.lr_debug_history["epoch"].append(self.epoch + 1)
+                self.lr_debug_history["lr"].append(self.lr_list)
+                
+                with open(Path(self.configer.general_config["logs_dir"]) / (self.configer.output_file_name + '_lr.json'), "w") as f:
+                    json.dump(self.lr_debug_history, f, indent=4)
+                    
+            self.epoch += 1

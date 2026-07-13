@@ -72,8 +72,8 @@ def visualize_predictions(
 
 def print_terminal_graph(
     data,
-    title: str,
-    num_lines: int=10
+    title: str=None,
+    num_lines: int=8
     ):
     
     """Prints a multi-line ASCII sparkline graph to the terminal."""
@@ -83,7 +83,7 @@ def print_terminal_graph(
     rng = max_val - min_val
     
     if title is not None:
-        print(f"{title} history:")
+        print(title)
     
     print(f"max: {max_val}")
         
@@ -107,7 +107,7 @@ def print_terminal_graph(
                     # Full block.
                     line.append(blocks[-1])     
                 elif h <= threshold_bottom:
-                    # Empty space
+                    # Empty space.
                     line.append(' ')
                 else:
                     # Maps heighths to blocks indices.
