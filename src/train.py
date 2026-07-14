@@ -133,7 +133,6 @@ class ModelTrainer(MetricsHistory):
         # Training procedure.
         self.epoch = None
         self.epoch_init = None
-        self.encoder_start_epoch = None
         self.optimizer = None
         self.scheduler = None
         self.loss = None
@@ -177,11 +176,12 @@ class ModelTrainer(MetricsHistory):
             ['train', 'val', 'test']
             )
         
-    def init_model(self):
-        """Initialize model and other data for procedure"""
-        
         if self.configer.general_config['debug_lr_log']:
             self.lr_debug_history = {key: [] for key in ["epoch", "lr"]}
+
+
+    def init_model(self):
+        """Initialize model and other data for procedure"""
         
         self.loss_func = CombinedLoss(
             bce_weight=self.bce_weight,
@@ -204,7 +204,6 @@ class ModelTrainer(MetricsHistory):
             device = self.device
             )
         self.epoch = self.epoch_init
-        self.encoder_start_epoch = self.configer.model_config['epochs']
         
         # Set optimizer.
         self.optimizer = update_optimizer(
@@ -501,13 +500,12 @@ class ModelTrainer(MetricsHistory):
             self.__test()
 
             self.log_epoch_history(['train', 'val', 'test'])
+            self.print_metrics(['train', 'val', 'test'])
+            self.reset_metrics()
             
             if (self.scheduler is not None) and (self.configer.model_config['scheduler_mode'] == 'epoch'):
                 self.lr_list = [self.optimizer.param_groups[0]["lr"]]
                 self.scheduler.step()
-
-            self.print_metrics(['train', 'val', 'test'])
-            self.reset_metrics()
             
             if self.configer.general_config['debug_terminal_graph_lines'] > 0:
                 print_terminal_graph(
