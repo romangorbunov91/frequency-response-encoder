@@ -109,8 +109,9 @@ class MetricTracker:
 class ModelTrainer:
 
     def __init__(self, configer):
+        
         self.configer = configer
-
+        
         #: str: Type of dataset.
         self.dataset_family = self.configer["dataset_family"].lower()
         self.dataset = self.configer["dataset_name"].lower()
@@ -182,12 +183,7 @@ class ModelTrainer:
     def init_model(self):
         """Initialize model and other data for procedure"""
         
-        self.loss_func = CombinedLoss(
-            bce_weight=self.bce_weight,
-            dice_weight=self.dice_weight,
-            ds_weights=self.configer.model_config['ds_weights']
-            ).to(self.device)
-        
+        # Setting model and loss.
         mdl_input_size = self.configer.model_config['input_size']
 
         self.net = self.model_type(
@@ -195,6 +191,12 @@ class ModelTrainer:
             out_channels = 4,
             features = self.configer.model_config['feature_list']
             )
+        
+        self.loss_func = CombinedLoss(
+            bce_weight=self.bce_weight,
+            dice_weight=self.dice_weight,
+            ds_weights=self.configer.model_config['ds_weights']
+            ).to(self.device)
 
         # Initializing training.
         self.net, self.epoch_init, optim_dict, sched_dict = load_net(
@@ -204,7 +206,7 @@ class ModelTrainer:
             )
         self.epoch = self.epoch_init
         
-        # Set optimizer.
+        # Setting optimizer.
         self.optimizer = update_optimizer(
             net = self.net,
             optim = self.configer.model_config['solver_type'],
@@ -218,9 +220,7 @@ class ModelTrainer:
             self.optimizer.load_state_dict(optim_dict)
             print(f"Resuming training {self.configer.model_config['model_name']} from epoch {self.epoch} using {self.configer.model_config['solver_type']}.")
         
-        shuffle_generator = torch.Generator()
-        shuffle_generator.manual_seed(self.configer.general_config['seed'])
-
+        # Setting scheduler.
         if self.configer.model_config['scheduler_type'] is not None:
             if self.configer.model_config['scheduler_type'] == "CosineAnnealingLR":
                 self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
@@ -281,6 +281,9 @@ class ModelTrainer:
         print(f"Model parameters: {self.model_size}")
 
         # Setting Dataloaders.
+        shuffle_generator = torch.Generator()
+        shuffle_generator.manual_seed(self.configer.general_config['seed'])
+        
         if self.dataset_family == "zeros-poles-dataset":
             self.train_loader = DataLoader(
                 ZerosPolesDataset(
