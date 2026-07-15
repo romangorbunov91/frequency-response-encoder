@@ -173,10 +173,11 @@ class ModelTrainer:
         
         # Setting model and loss.
         mdl_input_size = self.configer["model"]['input_size']
+        mdl_output_size = self.configer["model"]['output_size']
 
         self.net = self.model_type(
             in_channels = mdl_input_size[0],
-            out_channels = 4,
+            out_channels = mdl_output_size[0],
             features = self.configer["model"]['feature_list']
             )
         

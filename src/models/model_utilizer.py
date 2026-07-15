@@ -10,16 +10,18 @@ def load_net(
     device: torch.device
     ):
     
-    checkpoint_path = Path(checkpoints_file)
-
-    if checkpoint_path is None:
+    if checkpoints_file is None or str(checkpoints_file).strip() == "":
         epoch = 0
         optim_dict = None
         sched_dict = None
     else:
+        checkpoint_path = Path(checkpoints_file)
+
         if checkpoint_path.is_file():
             print('Restoring checkpoint: ', checkpoint_path)
-            checkpoint_dict = torch.load(checkpoint_path, map_location=device)
+
+            checkpoint_dict = torch.load(checkpoint_path, map_location=device, weights_only=False)
+            
             # Remove "module." from DataParallel, if present.
             checkpoint_dict['state_dict'] = {k[len('module.'):] if k.startswith('module.') else k: v for k, v in
                                                 checkpoint_dict['state_dict'].items()}
