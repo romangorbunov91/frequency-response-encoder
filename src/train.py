@@ -113,9 +113,9 @@ class ModelTrainer:
         self.configer = configer
         
         #: str: Type of dataset.
-        self.dataset_family = self.configer["dataset_family"].lower()
-        self.dataset = self.configer["dataset_name"].lower()
-        self.dataset_path = Path(self.configer.general_config["data_dir"]) / self.configer["dataset_name"]
+        self.dataset_family = self.configer["dataset"]["dataset_family"].lower()
+        self.dataset_path = Path(self.configer.general_config["data_dir"]) / \
+                            self.configer["dataset"]["dataset_name"].lower()
         
         # DataLoaders.
         self.train_loader = None
@@ -135,41 +135,29 @@ class ModelTrainer:
         self.scheduler = None
         self.loss = None
         
-        self.mask_threshold = self.configer.model_config["mask_threshold"]
-        self.bce_weight = self.configer.model_config["bce_weight"]
-        self.dice_weight = self.configer.model_config["dice_weight"]
+        self.mask_threshold = self.configer["training"]["mask_threshold"]
+        self.bce_weight = self.configer["training"]["bce_weight"]
+        self.dice_weight = self.configer["training"]["dice_weight"]
+        self.ds_weights = self.configer["training"]['ds_weights']
 
-        # Augmentation.
+        transforms_dict = self.configer["transforms"]
+        conversions_dict = self.configer["conversions"]
+
+        # Transforms.
         self.train_transforms = [
-            GeneralTransforms(
-                config=TransformsConfig(
-                    gain=[1.0, 1e4],
-                    phase_delay=[0.0, 3.14],
-                    noise_level=[20e-3, 300e-3],
-                    noise_reduce=1
-                    )
-                ),
-            ConversionTransforms(
-                num_iter=2,
-                return_input=False
-                )]
+            GeneralTransforms(config=TransformsConfig(**transforms_dict)),
+            ConversionTransforms(**conversions_dict)]
 
         self.val_transforms = [
-            ConversionTransforms(
-                num_iter=2,
-                return_input=False
-                )]
+            ConversionTransforms(**conversions_dict)]
         
         self.test_transforms = [
-            ConversionTransforms(
-                num_iter=2,
-                return_input=False
-                )]
+            ConversionTransforms(**conversions_dict)]
 
-        if self.configer.model_config["model_name"] == 'base-model':
+        if self.configer["model"]["model_name"] == 'base-model':
             self.model_type = base_model
         else:
-            raise NotImplementedError(f"Model '{self.configer.model_config['model_name']}' is not supported.")
+            raise NotImplementedError(f"Model '{self.configer['model_name']}' is not supported.")
         
         self.metric_tracker = MetricTracker(
             metric_names=['loss', 'dice', 'iou', 'accuracy'],
@@ -184,18 +172,18 @@ class ModelTrainer:
         """Initialize model and other data for procedure"""
         
         # Setting model and loss.
-        mdl_input_size = self.configer.model_config['input_size']
+        mdl_input_size = self.configer["model"]['input_size']
 
         self.net = self.model_type(
             in_channels = mdl_input_size[0],
             out_channels = 4,
-            features = self.configer.model_config['feature_list']
+            features = self.configer["model"]['feature_list']
             )
         
         self.loss_func = CombinedLoss(
             bce_weight=self.bce_weight,
             dice_weight=self.dice_weight,
-            ds_weights=self.configer.model_config['ds_weights']
+            ds_weights=self.ds_weights
             ).to(self.device)
 
         # Initializing training.
@@ -209,73 +197,75 @@ class ModelTrainer:
         # Setting optimizer.
         self.optimizer = update_optimizer(
             net = self.net,
-            optim = self.configer.model_config['solver_type'],
-            lr = self.configer.model_config['base_lr'],
-            decay = self.configer.model_config['weight_decay']
+            optim = self.configer["training"]['solver_type'],
+            lr = self.configer["training"]['base_lr'],
+            decay = self.configer["training"]['weight_decay']
             )
         
         if optim_dict is None:
-            print(f"Starting training {self.configer.model_config['model_name']} from scratch using {self.configer.model_config['solver_type']}.")
+            print(f"Starting training {self.configer['model']['model_name']} from scratch using {self.configer['training']['solver_type']}.")
         else:
             self.optimizer.load_state_dict(optim_dict)
-            print(f"Resuming training {self.configer.model_config['model_name']} from epoch {self.epoch} using {self.configer.model_config['solver_type']}.")
+            print(f"Resuming training {self.configer['model']['model_name']} from epoch {self.epoch} using {self.configer['training']['solver_type']}.")
         
         # Setting scheduler.
-        if self.configer.model_config['scheduler_type'] is not None:
-            if self.configer.model_config['scheduler_type'] == "CosineAnnealingLR":
+        if self.configer["scheduler"]['scheduler_type'] is not None:
+            if self.configer["scheduler"]['scheduler_type'] == "CosineAnnealingLR":
                 self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                     self.optimizer,
-                    T_max=self.configer.model_config['scheduler_T_max'],
-                    eta_min=self.configer.model_config['scheduler_eta_min']
+                    T_max=self.configer["scheduler"]['scheduler_T_max'],
+                    eta_min=self.configer["scheduler"]['scheduler_eta_min']
                     )
-            elif self.configer.model_config['scheduler_type'] == "CosineAnnealingWarmRestarts":
+            elif self.configer["scheduler"]['scheduler_type'] == "CosineAnnealingWarmRestarts":
                 self.scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
                     self.optimizer, 
-                    T_0 = self.configer.model_config['scheduler_T_0'],
-                    T_mult = self.configer.model_config['scheduler_T_mult'],
-                    eta_min = self.configer.model_config['scheduler_eta_min']
+                    T_0 = self.configer["scheduler"]['scheduler_T_0'],
+                    T_mult = self.configer["scheduler"]['scheduler_T_mult'],
+                    eta_min = self.configer["scheduler"]['scheduler_eta_min']
                     )
-            elif self.configer.model_config['scheduler_type'] == "WarmupCosineAnnealing":
+            elif self.configer["scheduler"]['scheduler_type'] == "WarmupCosineAnnealing":
                 self.scheduler = WarmupCosineAnnealingWarmRestarts(
                     self.optimizer,
-                    lr_max=self.configer.model_config['base_lr'],
-                    warmup_steps=self.configer.model_config['scheduler_warmup_steps'],
-                    T_0=self.configer.model_config['scheduler_T_0'],
-                    T_mult=self.configer.model_config['scheduler_T_mult'],
-                    eta_min = self.configer.model_config['scheduler_eta_min'],
+                    lr_max=self.configer["training"]['base_lr'],
+                    warmup_steps=self.configer['scheduler_warmup_steps'],
+                    T_0=self.configer["scheduler"]['scheduler_T_0'],
+                    T_mult=self.configer["scheduler"]['scheduler_T_mult'],
+                    eta_min = self.configer["scheduler"]['scheduler_eta_min'],
                     restart_flag=False
                     )
-            elif self.configer.model_config['scheduler_type'] == "WarmupCosineAnnealingWarmRestarts":
+            elif self.configer["scheduler"]['scheduler_type'] == "WarmupCosineAnnealingWarmRestarts":
                 self.scheduler = WarmupCosineAnnealingWarmRestarts(
                     self.optimizer,
-                    lr_max=self.configer.model_config['base_lr'],
-                    warmup_steps=self.configer.model_config['scheduler_warmup_steps'],
-                    T_0=self.configer.model_config['scheduler_T_0'],
-                    T_mult=self.configer.model_config['scheduler_T_mult'],
-                    eta_min = self.configer.model_config['scheduler_eta_min'],
+                    lr_max=self.configer["training"]['base_lr'],
+                    warmup_steps=self.configer["scheduler"]['scheduler_warmup_steps'],
+                    T_0=self.configer["scheduler"]['scheduler_T_0'],
+                    T_mult=self.configer["scheduler"]['scheduler_T_mult'],
+                    eta_min = self.configer["scheduler"]['scheduler_eta_min'],
                     restart_flag=True
                     )
-            elif self.configer.model_config['scheduler_type'] == "WarmupInvRsqrtLR":
+            elif self.configer["scheduler"]['scheduler_type'] == "WarmupInvRsqrtLR":
                 self.scheduler = WarmupInvRsqrtLR(
                     self.optimizer,
-                    lr_max=self.configer.model_config['base_lr'],
-                    warmup_steps=self.configer.model_config['scheduler_warmup_steps'],
-                    eta_min = self.configer.model_config['scheduler_eta_min']
+                    lr_max=self.configer["training"]['base_lr'],
+                    warmup_steps=self.configer["scheduler"]['scheduler_warmup_steps'],
+                    eta_min = self.configer["scheduler"]['scheduler_eta_min']
                     )
-            elif self.configer.model_config['scheduler_type'] == "WarmupCosineDecayLR":
+            elif self.configer["scheduler"]['scheduler_type'] == "WarmupCosineDecayLR":
                 self.scheduler = WarmupCosineDecayLR(
                     self.optimizer,
-                    lr_max=self.configer.model_config['base_lr'],
-                    warmup_steps=self.configer.model_config['scheduler_warmup_steps'],
-                    decay_rate=self.configer.model_config['scheduler_decay_rate'],
-                    eta_min=self.configer.model_config['scheduler_eta_min']
+                    lr_max=self.configer["training"]['base_lr'],
+                    warmup_steps=self.configer["scheduler"]['scheduler_warmup_steps'],
+                    decay_rate=self.configer["scheduler"]['scheduler_decay_rate'],
+                    eta_min=self.configer["scheduler"]['scheduler_eta_min']
                     )
             else:
-                raise NotImplementedError(f"Scheduler not supported: {self.configer.model_config['scheduler_type']}")
+                raise NotImplementedError(f"Scheduler not supported: {self.configer["scheduler"]['scheduler_type']}")
 
             if sched_dict is not None:
                 self.scheduler.load_state_dict(sched_dict)
-            print(f"Scheduler ON: {self.configer.model_config['scheduler_type']}")
+                print(f"Scheduler ON: {self.configer["scheduler"]['scheduler_type']}")
+            else:
+                print(f"Scheduler OFF")
         
         self.model_size = sum(p.numel() for p in self.net.parameters() if p.requires_grad)
         print(f"Model parameters: {self.model_size}")
@@ -289,10 +279,10 @@ class ModelTrainer:
                 ZerosPolesDataset(
                     dataset_dir=self.dataset_path,
                     split='train',
-                    mask_halfwindow=self.configer.model_config["mask_halfwindow"],
+                    mask_halfwindow=self.configer["training"]["mask_halfwindow"],
                     transforms=self.train_transforms
                     ), 
-                batch_size=self.configer.model_config["batch_size"],
+                batch_size=self.configer["training"]["batch_size"],
                 shuffle=True,
                 generator=shuffle_generator,
                 num_workers=self.configer.general_config["workers"],
@@ -303,10 +293,10 @@ class ModelTrainer:
                 ZerosPolesDataset(
                     dataset_dir=self.dataset_path,
                     split='val',
-                    mask_halfwindow=self.configer.model_config["mask_halfwindow"],
+                    mask_halfwindow=self.configer["training"]["mask_halfwindow"],
                     transforms=self.val_transforms
                     ), 
-                batch_size=self.configer.model_config["batch_size"],
+                batch_size=self.configer["training"]["batch_size"],
                 shuffle=False,
                 num_workers=self.configer.general_config["workers"],
                 pin_memory=True)
@@ -315,16 +305,16 @@ class ModelTrainer:
                 ZerosPolesDataset(
                     dataset_dir=self.dataset_path,
                     split='test',
-                    mask_halfwindow=self.configer.model_config["mask_halfwindow"],
+                    mask_halfwindow=self.configer["training"]["mask_halfwindow"],
                     transforms=self.test_transforms
                     ), 
-                batch_size=self.configer.model_config["batch_size"],
+                batch_size=self.configer["training"]["batch_size"],
                 shuffle=False,
                 num_workers=self.configer.general_config["workers"],
                 pin_memory=True)
             
         else:
-            raise NotImplementedError(f"Dataset not supported: {self.dataset}")
+            raise NotImplementedError(f"Dataset not supported: {self.dataset_family}")
         
         print(f"TRAIN size: {len(self.train_loader.dataset)}")
         print(f"VAL   size: {len(self.val_loader.dataset)}")
@@ -349,7 +339,7 @@ class ModelTrainer:
             nn.utils.clip_grad_norm_(self.net.parameters(), max_norm=1.0)
             self.optimizer.step()
             
-            if (self.scheduler is not None) and (self.configer.model_config['scheduler_mode'] == 'batch'):
+            if (self.scheduler is not None) and (self.configer["scheduler"]['scheduler_mode'] == 'batch'):
                 self.lr_list.append(self.optimizer.param_groups[0]["lr"])
                 self.scheduler.step()
 
@@ -418,7 +408,7 @@ class ModelTrainer:
                 )
         
         ret = self.model_utility.save(
-            self.metric_tracker.metrics[self.configer.model_config["checkpoints_metric"]]["val"].avg,
+            self.metric_tracker.metrics[self.configer["checkpoints"]["checkpoints_metric"]]["val"].avg,
             self.net,
             self.optimizer,
             self.epoch + 1,
@@ -481,7 +471,7 @@ class ModelTrainer:
             logits = logits[random_indices]
             masks = masks[random_indices]
             
-            save_dir = Path(self.configer.general_config['score_dir']) / f"{self.configer.model_config['model_name']}_{self.configer.run_id}"
+            save_dir = Path(self.configer.general_config['score_dir']) / f"{self.configer["model"]['model_name']}_{self.configer.run_id}"
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir, exist_ok=True)
                 
@@ -490,14 +480,14 @@ class ModelTrainer:
                 masks_all=masks.detach(),
                 dice_func=dice_coefficient,
                 iou_func=iou_score,
-                save_path=save_dir / f"{self.configer.model_config['model_name']}_{self.configer.run_id}_{self.epoch}.pdf",
+                save_path=save_dir / f"{self.configer["model"]['model_name']}_{self.configer.run_id}_{self.epoch}.pdf",
                 threshold=self.mask_threshold
                 )
         # END debug section.
             
     def train(self) -> None:
-        for n in range(self.configer['epochs']):
-            print("Starting epoch {} of {}.".format(self.epoch + 1, self.configer['epochs'] + self.epoch_init))
+        for n in range(self.configer['training']['epochs']):
+            print("Starting epoch {} of {}.".format(self.epoch + 1, self.configer['training']['epochs'] + self.epoch_init))
             print('Learning rate:', self.optimizer.param_groups[0]["lr"])
             
             # Reset learning rate list for this epoch.
@@ -517,20 +507,20 @@ class ModelTrainer:
                 )
             self.metric_tracker.reset_metrics()
             
-            if (self.scheduler is not None) and (self.configer.model_config['scheduler_mode'] == 'epoch'):
+            if (self.scheduler is not None) and (self.configer["scheduler"]['scheduler_mode'] == 'epoch'):
                 self.lr_list = [self.optimizer.param_groups[0]["lr"]]
                 self.scheduler.step()
             
             if self.configer.general_config['debug_terminal_graph_lines'] > 0:
                 print_terminal_graph(
                     data=self.lr_list,
-                    title=f"{self.configer.model_config['scheduler_type']} at epoch {self.epoch + 1}",
+                    title=f"{self.configer["scheduler"]['scheduler_type']} at epoch {self.epoch + 1}",
                     num_lines=self.configer.general_config['debug_terminal_graph_lines']
                     )
 
             if val_return < 0:
                 print("Got no improvement for {} subsequent epochs. Finished epoch {}, than stopped."
-                      .format(self.configer.model_config["early_stop_number"], self.epoch_init + n+1))
+                      .format(self.configer["training"]["early_stop_number"], self.epoch_init + n+1))
                 break
             
             output_dict = build_output_dict(

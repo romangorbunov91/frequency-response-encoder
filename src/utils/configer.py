@@ -1,4 +1,4 @@
-import json
+import tomllib
 import os
 
 class Configer(object):
@@ -20,11 +20,10 @@ class Configer(object):
         self.params = None
 
         if not os.path.exists(args.hypes):
-            raise ValueError('Json Path: {} not exists!'.format(args.hypes))
+            raise ValueError('TOML Path: {} not exists!'.format(args.hypes))
 
-        json_stream = open(args.hypes, 'r')
-        self.params = json.load(json_stream)
-        json_stream.close()
+        with open(args.hypes, 'rb') as toml_stream:
+            self.params = tomllib.load(toml_stream)
 
     def get(self, *keys):
         """Item getter

@@ -14,43 +14,55 @@ def build_output_dict(
     metadata = {
         "run_id": run_id,
         "model": {
-            "model_name": configer.model_config["model_name"],
-            "feature_list": configer.model_config["feature_list"],
-            "input_size": configer.model_config["input_size"],
+            "model_name": configer["model"]["model_name"],
+            "feature_list": configer["model"]["feature_list"],
+            "input_size": configer["model"]["input_size"],
             "param_count": model_param_count,
         },
         "dataset": {
             "dataset_family": configer.dataset_config["dataset_family"],
-            "dataset_name": configer.model_config["dataset_name"],
+            "dataset_name": configer["dataset"]["dataset_name"],
             "item_size": configer.dataset_config["item_size"],
             "train_size": train_size,
             "val_size": val_size,
             "test_size": test_size,
         },
         "training": {
-            "checkpoints_save_policy": configer.model_config["checkpoints_save_policy"],
-            "checkpoints_metric": configer.model_config["checkpoints_metric"],
-            "solver_type": configer.model_config["solver_type"],
-            "batch_size": configer.model_config["batch_size"],
-            "epochs": configer.model_config["epochs"],
-            "early_stop_number": configer.model_config["early_stop_number"],
-            "mask_halfwindow": configer.model_config["mask_halfwindow"],
-            "mask_threshold": configer.model_config["mask_threshold"],
-            "bce_weight": configer.model_config["bce_weight"],
-            "dice_weight": configer.model_config["dice_weight"],
-            "ds_weights": configer.model_config["ds_weights"],
-            "base_lr": configer.model_config["base_lr"],
-            "weight_decay": configer.model_config["weight_decay"],
+            "solver_type": configer["training"]["solver_type"],
+            "batch_size": configer["training"]["batch_size"],
+            "epochs": configer["training"]["epochs"],
+            "early_stop_number": configer["training"]["early_stop_number"],
+            "mask_halfwindow": configer["training"]["mask_halfwindow"],
+            "mask_threshold": configer["training"]["mask_threshold"],
+            "bce_weight": configer["training"]["bce_weight"],
+            "dice_weight": configer["training"]["dice_weight"],
+            "ds_weights": configer["training"]["ds_weights"],
+            "base_lr": configer["training"]["base_lr"],
+            "weight_decay": configer["training"]["weight_decay"],
+        },
+        "checkpoints": {
+            "checkpoints_save_policy": configer["checkpoints"]["checkpoints_save_policy"],
+            "checkpoints_metric": configer["checkpoints"]["checkpoints_metric"],
         },
         "scheduler": {
-            "scheduler_type": configer.model_config["scheduler_type"],
-            "scheduler_mode": configer.model_config["scheduler_mode"],
-            "scheduler_warmup_steps": configer.model_config["scheduler_warmup_steps"],
-            "scheduler_T_max": configer.model_config["scheduler_T_max"],
-            "scheduler_T_0": configer.model_config["scheduler_T_0"],
-            "scheduler_T_mult": configer.model_config["scheduler_T_mult"],
-            "scheduler_eta_min": configer.model_config["scheduler_eta_min"],
-            "scheduler_decay_rate": configer.model_config["scheduler_decay_rate"],
+            "scheduler_type": configer["scheduler"]["scheduler_type"],
+            "scheduler_mode": configer["scheduler"]["scheduler_mode"],
+            "scheduler_warmup_steps": configer["scheduler"]["scheduler_warmup_steps"],
+            "scheduler_T_max": configer["scheduler"]["scheduler_T_max"],
+            "scheduler_T_0": configer["scheduler"]["scheduler_T_0"],
+            "scheduler_T_mult": configer["scheduler"]["scheduler_T_mult"],
+            "scheduler_eta_min": configer["scheduler"]["scheduler_eta_min"],
+            "scheduler_decay_rate": configer["scheduler"]["scheduler_decay_rate"],
+        },
+        "transforms": {
+            "gain": configer["transforms"]["gain"],
+            "phase_delay": configer["transforms"]["phase_delay"],
+            "noise_level": configer["transforms"]["noise_level"],
+            "noise_reduce": configer["transforms"]["noise_reduce"],
+        },
+        "conversions": {
+            "num_iter": configer["conversions"]["num_iter"],
+            "return_input": configer["conversions"]["return_input"],
         },
         "device": configer.device,
         "workers": configer.general_config["workers"],
@@ -70,7 +82,7 @@ def build_output_dict(
         train_log.append(log_entry)
 
     # Summary: find best epoch based on monitored metric.
-    checkpoints_metric = configer.model_config["checkpoints_metric"]
+    checkpoints_metric = configer["checkpoints"]["checkpoints_metric"]
     val_scores = np.array(train_history[f"val_{checkpoints_metric}"])
     best_epoch_idx = np.argmax(val_scores)
     best_epoch = train_history["epoch"][best_epoch_idx]

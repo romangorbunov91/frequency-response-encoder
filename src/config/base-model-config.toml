@@ -1,0 +1,45 @@
+[model]
+model_name = "base-model"
+feature_list = [32, 64, 128, 256, 512]
+input_size = [4, 512]
+
+[dataset]
+dataset_family = "zeros-poles-dataset"
+dataset_name = "zeros-poles-dataset-very-noisy-deg"
+
+[training]
+solver_type = "Adam"
+batch_size = 360
+epochs = 5000
+early_stop_number = 50
+base_lr = 1e-5
+weight_decay = 1e-4
+mask_halfwindow = 8
+mask_threshold = 0.5
+bce_weight = 0.5
+dice_weight = 0.5
+ds_weights = [0.125, 0.25, 0.5]
+
+[checkpoints]
+checkpoints_save_policy = "best"
+checkpoints_metric = "dice"
+
+[scheduler]
+scheduler_type = "WarmupCosineAnnealingWarmRestarts"
+scheduler_mode = "batch"
+scheduler_warmup_steps = 100
+scheduler_T_max = 100
+scheduler_T_0 = 100
+scheduler_T_mult = 1
+scheduler_eta_min = 1e-7
+scheduler_decay_rate = 0.1
+
+[transforms]
+gain = [1.0, 1e4]
+phase_delay = [0.0, 3.14]
+noise_level = [20e-3, 300e-3]
+noise_reduce = 1
+
+[conversions]
+num_iter = 2
+return_input = false

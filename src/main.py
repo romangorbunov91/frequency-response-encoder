@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import json
+import tomllib
 import random
 from pathlib import Path
 from datetime import datetime
@@ -46,12 +47,7 @@ if __name__ == "__main__":
     with open(config_path, "r") as f:
         configer.general_config = json.load(f)
     
-    model_config_path = config_dir / f"{configer['model_name']}-config.json"
-    assert model_config_path.exists(), f"Config not found: {model_config_path}"
-    with open(model_config_path, "r") as f:
-        configer.model_config = json.load(f)
-    
-    dataset_config_path = config_dir / f"{configer['dataset_family']}-config.json"
+    dataset_config_path = config_dir / f"{configer['dataset']['dataset_family']}-config.json"
     assert dataset_config_path.exists(), f"Config not found: {dataset_config_path}"
     with open(dataset_config_path, "r") as f:
         configer.dataset_config = json.load(f)
@@ -61,16 +57,16 @@ if __name__ == "__main__":
     configer.device = configer.general_config.get("device").lower() if torch.cuda.is_available() else 'cpu'
     configer.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    output_file_name = (f"{configer.model_config['model_name']}_"
-        f"{'_'.join(str(x) for x in configer.model_config['feature_list'])}_"
-        f"{configer.model_config['solver_type']}_"
-        f"batch_{configer.model_config['batch_size']}_"
-        f"HW_{configer.model_config['mask_halfwindow']}_"
-        f"Wbce_{str(configer.model_config['bce_weight'])}_"
-        f"Wdice_{str(configer.model_config['dice_weight'])}_"
-        f"Wds_{'_'.join(str(x) for x in configer.model_config['ds_weights'])}_"
-        f"scheduler_{str(configer.model_config['scheduler_type'])}_"
-        f"mode_{configer.model_config['scheduler_mode']}"
+    output_file_name = (f"{configer["model"]['model_name']}_"
+        f"{'_'.join(str(x) for x in configer["model"]['feature_list'])}_"
+        f"{configer["training"]['solver_type']}_"
+        f"batch_{configer["training"]['batch_size']}_"
+        f"HW_{configer["training"]['mask_halfwindow']}_"
+        f"Wbce_{str(configer["training"]['bce_weight'])}_"
+        f"Wdice_{str(configer["training"]['dice_weight'])}_"
+        f"Wds_{'_'.join(str(x) for x in configer["training"]['ds_weights'])}_"
+        f"scheduler_{str(configer["scheduler"]['scheduler_type'])}_"
+        f"mode_{configer["scheduler"]['scheduler_mode']}"
         )
     
     configer.output_file_name = (output_file_name.replace('.', '_'))
