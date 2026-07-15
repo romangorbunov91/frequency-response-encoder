@@ -32,8 +32,8 @@ def worker_init_fn(worker_id):
     if torch.cuda.is_available():
         torch.cuda.manual_seed(worker_seed)
 
-class MetricsHistory:
-    def initialize_metrics(self, metric_names, phases):
+class MetricTracker:
+    def __init__(self, metric_names, phases):
         """Call this in __init__ of your main class."""
         
         phase_keys = [phase.lower() for phase in phases]
@@ -61,27 +61,24 @@ class MetricsHistory:
             prefix = ''
         
         if 'train' in phase_keys:
-            train_str = ", ".join(f"{name}: {self.train_history[f'train_{name}'][-1]:.4f}" 
+            print_str = ", ".join(f"{name}: {self.train_history[f'train_{name}'][-1]:.4f}" 
                                 for name in list(self.metrics.keys()))
-            print(f"{prefix}TRAIN {train_str}")
+            print(f"{prefix}TRAIN {print_str}")
         
         if 'val' in phase_keys:
-            val_str = ", ".join(f"{name}: {self.train_history[f'val_{name}'][-1]:.4f}" 
+            print_str = ", ".join(f"{name}: {self.train_history[f'val_{name}'][-1]:.4f}" 
                                 for name in list(self.metrics.keys()))
-            print(f"{' ' * len(prefix)}VAL   {val_str}")
+            print(f"{' ' * len(prefix)}VAL   {print_str}")
 
         if 'test' in phase_keys:
-            val_str = ", ".join(f"{name}: {self.train_history[f'test_{name}'][-1]:.4f}" 
+            print_str = ", ".join(f"{name}: {self.train_history[f'test_{name}'][-1]:.4f}" 
                                 for name in list(self.metrics.keys()))
-            print(f"{' ' * len(prefix)}TEST  {val_str}")
+            print(f"{' ' * len(prefix)}TEST  {print_str}")
             
-    def log_epoch_history(self, phases):
+    def log_epoch_history(self, phases, epoch: int, lr: float):
         
-        if hasattr(self, 'epoch'):
-            self.train_history["epoch"].append(self.epoch + 1)
-        
-        if hasattr(self, 'optimizer'):
-            self.train_history["lr"].append(self.optimizer.param_groups[0]["lr"])
+        self.train_history["epoch"].append(epoch)
+        self.train_history["lr"].append(lr)
         
         phase_keys = [phase.lower() for phase in phases]
         for name in self.metrics:
@@ -109,7 +106,7 @@ class MetricsHistory:
             for meter in metric_dict.values():
                 meter.reset()
 
-class ModelTrainer(MetricsHistory):
+class ModelTrainer:
 
     def __init__(self, configer):
         self.configer = configer
@@ -170,11 +167,13 @@ class ModelTrainer(MetricsHistory):
 
         if self.configer.model_config["model_name"] == 'base-model':
             self.model_type = base_model
-
-        self.initialize_metrics(
-            ['loss', 'dice', 'iou', 'accuracy'],
-            ['train', 'val', 'test']
-            )
+        else:
+            raise NotImplementedError(f"Model '{self.configer.model_config['model_name']}' is not supported.")
+        
+        self.metric_tracker = MetricTracker(
+            metric_names=['loss', 'dice', 'iou', 'accuracy'],
+            phases=['train', 'val', 'test']
+        )
         
         if self.configer.general_config['debug_lr_log']:
             self.lr_debug_history = {key: [] for key in ["epoch", "lr"]}
@@ -354,7 +353,7 @@ class ModelTrainer(MetricsHistory):
             if isinstance(logits, tuple):
                 logits, _ = logits
 
-            self.update_metrics(
+            self.metric_tracker.update_metrics(
                 split = "train",
                 batch_size = inputs.size(0),
                 loss = loss.item(),
@@ -391,7 +390,10 @@ class ModelTrainer(MetricsHistory):
                     targets=masks
                     )
 
-                self.update_metrics(
+                if isinstance(logits, tuple):
+                    logits, _ = logits
+
+                self.metric_tracker.update_metrics(
                     split = "val",
                     batch_size = inputs.size(0),
                     loss = loss.item(),
@@ -413,7 +415,7 @@ class ModelTrainer(MetricsHistory):
                 )
         
         ret = self.model_utility.save(
-            self.metrics[self.configer.model_config["checkpoints_metric"]]["val"].avg,
+            self.metric_tracker.metrics[self.configer.model_config["checkpoints_metric"]]["val"].avg,
             self.net,
             self.optimizer,
             self.epoch + 1,
@@ -438,8 +440,11 @@ class ModelTrainer(MetricsHistory):
                     logits=logits, 
                     targets=masks
                     )
+                
+                if isinstance(logits, tuple):
+                    logits, _ = logits
 
-                self.update_metrics(
+                self.metric_tracker.update_metrics(
                     split = "test",
                     batch_size = inputs.size(0),
                     loss = loss.item(),
@@ -499,9 +504,15 @@ class ModelTrainer(MetricsHistory):
             val_return = self.__val()
             self.__test()
 
-            self.log_epoch_history(['train', 'val', 'test'])
-            self.print_metrics(['train', 'val', 'test'])
-            self.reset_metrics()
+            self.metric_tracker.log_epoch_history(
+                phases=['train', 'val', 'test'], 
+                epoch=self.epoch + 1, 
+                lr=self.optimizer.param_groups[0]["lr"]
+                )
+            self.metric_tracker.print_metrics(
+                phases=['train', 'val', 'test']
+                )
+            self.metric_tracker.reset_metrics()
             
             if (self.scheduler is not None) and (self.configer.model_config['scheduler_mode'] == 'epoch'):
                 self.lr_list = [self.optimizer.param_groups[0]["lr"]]
@@ -521,7 +532,7 @@ class ModelTrainer(MetricsHistory):
             
             output_dict = build_output_dict(
                 configer=self.configer,
-                train_history=self.train_history,
+                train_history=self.metric_tracker.train_history,
                 run_id=self.configer.run_id,
                 train_size=len(self.train_loader.dataset),
                 val_size=len(self.val_loader.dataset),
