@@ -3,5 +3,6 @@
   "train_dir": "train",
   "val_dir": "val",
   "test_dir": "test",
-  "item_size": [2, 512]
+  "item_size": [2, 512],
+  "mask_size": [4, 512]
 }

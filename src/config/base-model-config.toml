@@ -2,6 +2,7 @@
 model_name = "base-model"
 feature_list = [32, 64, 128, 256, 512]
 input_size = [4, 512]
+output_size = [4, 512]
 
 [dataset]
 dataset_family = "zeros-poles-dataset"
@@ -25,10 +26,10 @@ checkpoints_save_policy = "best"
 checkpoints_metric = "dice"
 
 [scheduler]
-scheduler_type = "WarmupCosineAnnealingWarmRestarts"
-scheduler_mode = "batch"
+scheduler_type = "CosineAnnealingLR"
+scheduler_mode = "epoch"
 scheduler_warmup_steps = 100
-scheduler_T_max = 100
+scheduler_T_max = 20
 scheduler_T_0 = 100
 scheduler_T_mult = 1
 scheduler_eta_min = 1e-7
