@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from typing import List, Tuple, Optional
-from typing_extensions import Self
+from typing import List
 
 class ResConvBlock(nn.Module):
     def __init__(
