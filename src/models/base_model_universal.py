@@ -103,10 +103,11 @@ class TransformerBottleneck(nn.Module):
     def __init__(self,
             channels: int,
             num_heads: int=8,
-            mlp_ratio: float=4,
+            mlp_ratio: float=4.0,
             dropout: float=0.1
             ):
         super().__init__()
+        '''
         assert channels % num_heads == 0, "channels must be divisible by num_heads"
         
         self.num_heads = num_heads
@@ -134,6 +135,11 @@ class TransformerBottleneck(nn.Module):
             out_features=channels,
             bias=False
         )
+        '''
+
+        # BEGIN delete section.
+        self.attn = nn.MultiheadAttention(channels, num_heads, dropout=dropout, batch_first=True)
+        # END delete section.
         
         self.norm_attn = nn.GroupNorm(
             num_groups=1,
@@ -162,6 +168,11 @@ class TransformerBottleneck(nn.Module):
         x_norm = self.norm_attn(x)
         x_t = x_norm.transpose(1, 2) # (B, L, C)
         
+        # BEGIN delete section.
+        attn_out, _ = self.attn(x_t, x_t, x_t)
+        # END delete section.
+
+        '''
         # Project and reshape for multi-head attention
         # (B, L, C) -> (B, L, num_heads, head_dim) -> (B, num_heads, L, head_dim).
         q = self.q_proj(x_t).view(B, L, self.num_heads, self.head_dim).transpose(1, 2)
@@ -178,6 +189,7 @@ class TransformerBottleneck(nn.Module):
         # (B, num_heads, L, head_dim) -> (B, L, C)
         attn_out = attn_out.transpose(1, 2).contiguous().view(B, L, C)
         attn_out = self.out_proj(attn_out)
+        '''
         
         x = x + attn_out.transpose(1, 2)
         
