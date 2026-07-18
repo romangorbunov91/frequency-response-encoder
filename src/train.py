@@ -22,6 +22,7 @@ from src.dataloaders.ZerosPolesDataset import TransformsConfig, ZerosPolesDatase
 # Import Model.
 from src.models.model_utilizer import load_net, update_optimizer_simple, ModelUtilizer
 from src.models.base_model import base_model
+from src.models.base_model_universal import base_model as base_model_universal
 
 # Setting seeds.
 def worker_init_fn(worker_id):
@@ -156,6 +157,8 @@ class ModelTrainer:
 
         if self.configer["model"]["model_name"] == 'base-model':
             self.model_type = base_model
+        elif self.configer["model"]["model_name"] == 'base-model-universal':
+            self.model_type = base_model_universal
         else:
             raise NotImplementedError(f"Model '{self.configer['model_name']}' is not supported.")
         

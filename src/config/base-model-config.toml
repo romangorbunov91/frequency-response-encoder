@@ -19,7 +19,7 @@ dataset_name = "zeros-poles-dataset-very-noisy-deg"
 [training]
 solver_type = "Adam"
 batch_size = 360
-epochs = 5000
+epochs = 5
 early_stop_number = 50
 base_lr = 1e-3
 # 1e-4 for Adam/RMSProp, or 1e-2 for AdamW.
