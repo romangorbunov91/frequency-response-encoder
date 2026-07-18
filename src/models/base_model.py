@@ -46,7 +46,7 @@ class ResConvBlock(nn.Module):
             bias=False
             ) if in_channels != out_channels else nn.Identity()
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.conv(x) + self.skip(x)
 
 class AttentionGate(nn.Module):
@@ -54,7 +54,9 @@ class AttentionGate(nn.Module):
         self,
         F_g: int,
         F_l: int,
-        F_int: int):
+        F_int: int
+        ):
+
         super().__init__()
         self.W_g = nn.Sequential(
             nn.Conv1d(
@@ -97,14 +99,15 @@ class AttentionGate(nn.Module):
         return x * psi
 
 class TransformerBottleneck(nn.Module):
-    def __init__(
-        self,
-        channels: int,
-        num_heads: int=8,
-        mlp_ratio=4,
-        dropout=0.1
+    def __init__(self,
+            channels: int,
+            num_heads: int=8,
+            mlp_ratio: float=4.0,
+            dropout: float=0.1
         ):
+
         super().__init__()
+
         self.norm1 = nn.GroupNorm(
             num_groups=1,
             num_channels=channels
@@ -138,12 +141,14 @@ class TransformerBottleneck(nn.Module):
         return x + mlp_out
 
 class UpSample(nn.Module):
-    def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        scale_factor: int=2):
+    def __init__(self,
+            in_channels: int,
+            out_channels: int,
+            scale_factor: int=2
+        ):
+
         super().__init__()
+        
         self.up = nn.Sequential(
             nn.Upsample(scale_factor=scale_factor, mode='nearest'),
             nn.Conv1d(
@@ -165,11 +170,12 @@ class UpSample(nn.Module):
 class _base_model(nn.Module):
 
     def __init__(self,
-                in_channels: int,
-                out_channels: int,
-                features: List[int],
-                deep_supervision: bool=True
-                ):
+            in_channels: int,
+            out_channels: int,
+            features: List[int],
+            deep_supervision: bool=True
+            ):
+        
         super(_base_model, self).__init__()
         
         self.deep_supervision = deep_supervision

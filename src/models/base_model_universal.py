@@ -59,6 +59,7 @@ class AttentionGate(nn.Module):
         F_l: int,
         F_int: Optional[int] = None
         ):
+
         super().__init__()
         F_int = F_int or (F_g // 2)
         self.W_g = nn.Sequential(
@@ -106,7 +107,8 @@ class TransformerBottleneck(nn.Module):
             num_heads: int=8,
             mlp_ratio: float=4.0,
             dropout: float=0.1
-            ):
+        ):
+        
         super().__init__()
         '''
         assert channels % num_heads == 0, "channels must be divisible by num_heads"
@@ -209,7 +211,9 @@ class UpSample(nn.Module):
             out_channels: int,
             scale_factor: int=2
             ):
+        
         super().__init__()
+
         self.up = nn.Sequential(
             nn.Upsample(scale_factor=scale_factor, mode='nearest'),
             nn.Conv1d(
@@ -243,7 +247,9 @@ class _base_model(nn.Module):
             use_attention_gate: bool=True,
             use_skip_connection: bool=True
             ):
+        
         super(_base_model, self).__init__()
+        
         self.deep_supervision = deep_supervision
         self.use_attention_gate = use_attention_gate
         self.use_skip_connection = use_skip_connection
@@ -357,7 +363,7 @@ class _base_model(nn.Module):
         d_prev = self.bottleneck_attn(self.bottleneck_proj(x))
         
         # Decoder.
-        if self.deep_supervision:
+        if self.deep_supervision and self.deep_supervision:
             ds_outs = []
         
         for i, (up, dec) in enumerate(zip(self.upsamples, self.decoders)):
