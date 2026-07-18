@@ -8,9 +8,9 @@ class ResConvBlock(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        dropout: float=0.1,
         kernel_size: int=3,
-        stride: int=1
+        stride: int=1,
+        dropout: float=0.1
         ):
         super().__init__()
         self.conv = nn.Sequential(
@@ -221,10 +221,14 @@ class _base_model(nn.Module):
             mlp_ratio: float=4.0,
             transformer_dropout: float=0.1,
             conv_dropout: float=0.1,
-            deep_supervision: bool=True
+            deep_supervision: bool=True,
+            use_attention_gate: bool=True,
+            use_skip_connection: bool=True
             ):
         super(_base_model, self).__init__()
         self.deep_supervision = deep_supervision
+        self.use_attention_gate = use_attention_gate
+        self.use_skip_connection = use_skip_connection
         self.num_levels = len(features) - 1
         
         # Initial projection.
@@ -286,15 +290,22 @@ class _base_model(nn.Module):
                     out_channels=features[i],
                     scale_factor=2
                 ))
-            self.att_gates.append(
-                AttentionGate(
-                    F_g=features[i],
-                    F_l=features[i],
-                    F_int=features[i] // 2
-                ))
+            
+            if self.use_skip_connection:
+                if self.use_attention_gate:
+                    self.att_gates.append(
+                        AttentionGate(
+                            F_g=features[i],
+                            F_l=features[i],
+                            F_int=features[i] // 2
+                        ))
+                decoder_in_channels = features[i] * 2
+            else:
+                decoder_in_channels = features[i]
+            
             self.decoders.append(
                 ResConvBlock(
-                    in_channels=features[i] * 2,
+                    in_channels=decoder_in_channels,
                     out_channels=features[i],
                     dropout=conv_dropout
                 ))
@@ -329,11 +340,18 @@ class _base_model(nn.Module):
         # Decoder
         ds_outs = []
         d_prev = b
-        for i, (up, att, dec) in enumerate(zip(self.upsamples, self.att_gates, self.decoders)):
+        for i, (up, dec) in enumerate(zip(self.upsamples, self.decoders)):
             skip_idx = len(enc_outs) - 1 - i
             g = up(d_prev)
-            d_prev = dec(torch.cat([g, att(g, enc_outs[skip_idx])], dim=1))
             
+            if self.use_skip_connection:
+                skip = enc_outs[skip_idx]
+                if self.use_attention_gate:
+                    skip = self.att_gates[i](g, skip)
+                d_prev = dec(torch.cat([g, skip], dim=1))
+            else:
+                d_prev = dec(g)
+
             # Collect deep supervision outputs.
             if i < len(self.ds_convs):
                 ds_outs.append(self.ds_convs[i](d_prev))
@@ -348,12 +366,14 @@ def base_model(
     in_channels: int,
     out_channels: int,
     features: List[int],
-    input_conv_kernel_size: int,
+    input_conv_kernel_size: int=5,
     num_heads: int=8,
     mlp_ratio: float=4.0,
     transformer_dropout: float=0.1,
     conv_dropout: float=0.1,
-    deep_supervision: bool=True
+    deep_supervision: bool=True,
+    use_attention_gate: bool=True,
+    use_skip_connection: bool=True
     ) -> _base_model:
     return _base_model(
         in_channels=in_channels,
@@ -364,5 +384,7 @@ def base_model(
         mlp_ratio=mlp_ratio,
         transformer_dropout=transformer_dropout,
         conv_dropout=conv_dropout,
-        deep_supervision=deep_supervision
+        deep_supervision=deep_supervision,
+        use_attention_gate=use_attention_gate,
+        use_skip_connection=use_skip_connection
         )
