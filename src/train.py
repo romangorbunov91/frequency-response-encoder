@@ -260,11 +260,11 @@ class ModelTrainer:
                     eta_min=self.configer["scheduler"]['scheduler_eta_min']
                     )
             else:
-                raise NotImplementedError(f"Scheduler not supported: {self.configer["scheduler"]['scheduler_type']}")
+                raise NotImplementedError(f"Scheduler not supported: {self.configer['scheduler']['scheduler_type']}")
 
             if sched_dict is not None:
                 self.scheduler.load_state_dict(sched_dict)
-                print(f"Scheduler ON: {self.configer["scheduler"]['scheduler_type']}")
+                print(f"Scheduler ON: {self.configer['scheduler']['scheduler_type']}")
             else:
                 print(f"Scheduler OFF")
         
@@ -472,7 +472,7 @@ class ModelTrainer:
             logits = logits[random_indices]
             masks = masks[random_indices]
             
-            save_dir = Path(self.configer.general_config['score_dir']) / f"{self.configer["model"]['model_name']}_{self.configer.run_id}"
+            save_dir = Path(self.configer.general_config['score_dir']) / f"{self.configer['model']['model_name']}_{self.configer.run_id}"
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir, exist_ok=True)
                 
@@ -481,7 +481,7 @@ class ModelTrainer:
                 masks_all=masks.detach(),
                 dice_func=dice_coefficient,
                 iou_func=iou_score,
-                save_path=save_dir / f"{self.configer["model"]['model_name']}_{self.configer.run_id}_{self.epoch}.pdf",
+                save_path=save_dir / f"{self.configer['model']['model_name']}_{self.configer.run_id}_{self.epoch}.pdf",
                 threshold=self.mask_threshold
                 )
         # END debug section.
@@ -515,13 +515,13 @@ class ModelTrainer:
             if self.configer.general_config['debug_terminal_graph_lines'] > 0:
                 print_terminal_graph(
                     data=self.lr_list,
-                    title=f"{self.configer["scheduler"]['scheduler_type']} at epoch {self.epoch + 1}",
+                    title=f"{self.configer['scheduler']['scheduler_type']} at epoch {self.epoch + 1}",
                     num_lines=self.configer.general_config['debug_terminal_graph_lines']
                     )
 
             if val_return < 0:
                 print("Got no improvement for {} subsequent epochs. Finished epoch {}, than stopped."
-                      .format(self.configer["training"]["early_stop_number"], self.epoch_init + n+1))
+                      .format(self.configer['training']['early_stop_number'], self.epoch_init + n+1))
                 break
             
             output_dict = build_output_dict(

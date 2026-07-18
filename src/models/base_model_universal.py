@@ -338,7 +338,9 @@ class _base_model(nn.Module):
         b = self.bottleneck_attn(self.bottleneck_proj(x))
         
         # Decoder
-        ds_outs = []
+        if self.deep_supervision:
+            ds_outs = []
+        
         d_prev = b
         for i, (up, dec) in enumerate(zip(self.upsamples, self.decoders)):
             skip_idx = len(enc_outs) - 1 - i
@@ -352,9 +354,10 @@ class _base_model(nn.Module):
             else:
                 d_prev = dec(g)
 
-            # Collect deep supervision outputs.
-            if i < len(self.ds_convs):
-                ds_outs.append(self.ds_convs[i](d_prev))
+            if self.deep_supervision:
+                # Collect deep supervision outputs.
+                if i < len(self.ds_convs):
+                    ds_outs.append(self.ds_convs[i](d_prev))
 
         out_main = self.final_conv(d_prev)
 

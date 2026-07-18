@@ -1,8 +1,16 @@
 [model]
 model_name = "base-model"
-feature_list = [32, 64, 128, 256, 512]
 input_size = [4, 512]
 output_size = [4, 512]
+feature_list = [32, 64, 128, 256, 512]
+input_conv_kernel_size = 5
+num_heads = 8
+mlp_ratio = 4.0
+transformer_dropout = 0.1
+conv_dropout = 0.1
+deep_supervision = true
+use_attention_gate = true
+use_skip_connection = true
 
 [dataset]
 dataset_family = "zeros-poles-dataset"

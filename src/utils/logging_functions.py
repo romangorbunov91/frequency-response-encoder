@@ -15,9 +15,17 @@ def build_output_dict(
         "run_id": run_id,
         "model": {
             "model_name": configer["model"]["model_name"],
-            "feature_list": configer["model"]["feature_list"],
             "input_size": configer["model"]["input_size"],
             "output_size": configer["model"]["output_size"],
+            "feature_list": configer["model"]["feature_list"],
+            "input_conv_kernel_size": configer["model"]["input_conv_kernel_size"],
+            "num_heads": configer["model"]["num_heads"],
+            "mlp_ratio": configer["model"]["mlp_ratio"],
+            "transformer_dropout": configer["model"]["transformer_dropout"],
+            "conv_dropout": configer["model"]["conv_dropout"],
+            "deep_supervision": configer["model"]["deep_supervision"],
+            "use_attention_gate": configer["model"]["use_attention_gate"],
+            "use_skip_connection": configer["model"]["use_skip_connection"],
             "param_count": model_param_count,
         },
         "dataset": {
