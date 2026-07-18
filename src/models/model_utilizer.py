@@ -122,7 +122,7 @@ class ModelUtilizer(object):
         self.device = torch.device(self.configer.device)
         print(f"Device (model_utilizer.py): {self.device}")
         self.output_file_name = self.configer.output_file_name
-        self.save_policy = self.configer["checkpoints"]["checkpoints_save_policy"]
+        self.save_policy = self.configer["checkpoints"]["checkpoints_save_policy"].lower()
         if self.save_policy == "all":
             self.save = self.save_all
         elif self.save_policy == "best":
@@ -133,7 +133,7 @@ class ModelUtilizer(object):
         else:
             raise ValueError(f'Policy "{self.save_policy}" is unknown.')
 
-        self.best_metric = self.configer["checkpoints"]["checkpoints_metric"]
+        self.best_metric = self.configer["checkpoints"]["checkpoints_metric"].lower()
         self.best_metric_value = 0
         self.last_improvement_cnt = 0
 
