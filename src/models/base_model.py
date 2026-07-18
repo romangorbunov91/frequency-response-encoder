@@ -85,7 +85,8 @@ class AttentionGate(nn.Module):
             nn.GroupNorm(
                 num_groups=1,
                 num_channels=1),
-            nn.Sigmoid())
+            nn.Sigmoid()
+            )
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, g, x):    
@@ -157,7 +158,8 @@ class UpSample(nn.Module):
                 num_channels=out_channels),
             nn.GELU()
         )
-    def forward(self, x): return self.up(x)
+    def forward(self, x):
+        return self.up(x)
 
 
 class _base_model(nn.Module):
@@ -201,7 +203,7 @@ class _base_model(nn.Module):
         self.bottleneck_attn = TransformerBottleneck(
             channels=features[4],
             num_heads=8,
-            mlp_ratio=4,
+            mlp_ratio=4.0,
             dropout=0.1)
 
         # Decoder with Attention Gated Skip Connections.
@@ -225,7 +227,9 @@ class _base_model(nn.Module):
         self.final_conv = nn.Conv1d(
             in_channels=features[0],
             out_channels=out_channels,
-            kernel_size=1)
+            kernel_size=1
+            )
+        
         self.ds_convs = nn.ModuleList([
             nn.Conv1d(
                 in_channels=features[3],
@@ -239,7 +243,7 @@ class _base_model(nn.Module):
                 in_channels=features[1],
                 out_channels=out_channels,
                 kernel_size=1)
-        ])
+            ])
 
     def forward(self, x):
         # Encoder

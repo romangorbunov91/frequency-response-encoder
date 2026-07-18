@@ -90,7 +90,8 @@ class AttentionGate(nn.Module):
             nn.GroupNorm(
                 num_groups=1,
                 num_channels=1),
-            nn.Sigmoid())
+            nn.Sigmoid()
+            )
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self,
@@ -138,7 +139,11 @@ class TransformerBottleneck(nn.Module):
         '''
 
         # BEGIN delete section.
-        self.attn = nn.MultiheadAttention(channels, num_heads, dropout=dropout, batch_first=True)
+        self.attn = nn.MultiheadAttention(
+            embed_dim=channels,
+            num_heads=num_heads,
+            dropout=dropout,
+            batch_first=True)
         # END delete section.
         
         self.norm_attn = nn.GroupNorm(
@@ -221,6 +226,7 @@ class UpSample(nn.Module):
         )
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.up(x)
+
 
 class _base_model(nn.Module):
 
@@ -322,7 +328,7 @@ class _base_model(nn.Module):
                     dropout=conv_dropout
                 ))
             
-            # Deep supervision for all decoder stages except the final one (i=0)
+            # Deep supervision for all decoder stages except the final one (i=0).
             if i > 0:
                 self.ds_convs.append(
                     nn.Conv1d(
@@ -335,7 +341,8 @@ class _base_model(nn.Module):
         self.final_conv = nn.Conv1d(
             in_channels=features[0],
             out_channels=out_channels,
-            kernel_size=1)
+            kernel_size=1
+            )
 
     def forward(self, x):
         # Encoder.
@@ -347,13 +354,12 @@ class _base_model(nn.Module):
             x = self.pool(x)
         
         # Bottleneck.
-        b = self.bottleneck_attn(self.bottleneck_proj(x))
+        d_prev = self.bottleneck_attn(self.bottleneck_proj(x))
         
-        # Decoder
+        # Decoder.
         if self.deep_supervision:
             ds_outs = []
         
-        d_prev = b
         for i, (up, dec) in enumerate(zip(self.upsamples, self.decoders)):
             skip_idx = len(enc_outs) - 1 - i
             g = up(d_prev)
@@ -366,7 +372,7 @@ class _base_model(nn.Module):
             else:
                 d_prev = dec(g)
 
-            if self.deep_supervision:
+            if self.training and self.deep_supervision:
                 # Collect deep supervision outputs.
                 if i < len(self.ds_convs):
                     ds_outs.append(self.ds_convs[i](d_prev))
