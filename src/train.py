@@ -20,7 +20,7 @@ from torch.utils.data import DataLoader
 from src.dataloaders.ZerosPolesDataset import TransformsConfig, ZerosPolesDataset, ConversionTransforms, GeneralTransforms
 
 # Import Model.
-from src.models.model_utilizer import load_net, update_optimizer, ModelUtilizer
+from src.models.model_utilizer import load_net, update_optimizer_simple, ModelUtilizer
 from src.models.base_model import base_model
 
 # Setting seeds.
@@ -196,11 +196,11 @@ class ModelTrainer:
         self.epoch = self.epoch_init
         
         # Setting optimizer.
-        self.optimizer = update_optimizer(
+        self.optimizer = update_optimizer_simple(
             net = self.net,
             optim = self.configer["training"]['solver_type'],
             lr = self.configer["training"]['base_lr'],
-            decay = self.configer["training"]['weight_decay']
+            weight_decay = self.configer["training"]['weight_decay']
             )
         
         if optim_dict is None:
