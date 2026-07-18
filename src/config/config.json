@@ -6,6 +6,7 @@
   "device": "cuda",
   "workers": 4,
   "seed": 1991,
+  "hash_length": 8,
   "debug_num_samples": 4,
   "debug_terminal_graph_lines": 8,
   "debug_lr_log": true

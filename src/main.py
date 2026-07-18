@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import json
-import tomllib
+import hashlib
 import random
 from pathlib import Path
 from datetime import datetime
@@ -35,7 +35,6 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    
     torch.autograd.set_detect_anomaly(True)
     configer = Configer(args)
 
@@ -57,18 +56,33 @@ if __name__ == "__main__":
     configer.device = configer.general_config.get("device").lower() if torch.cuda.is_available() else 'cpu'
     configer.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    output_file_name = (f"{configer["model"]['model_name']}_"
-        f"{'_'.join(str(x) for x in configer["model"]['feature_list'])}_"
-        f"{configer["training"]['solver_type']}_"
-        f"batch_{configer["training"]['batch_size']}_"
-        f"HW_{configer["training"]['mask_halfwindow']}_"
-        f"Wbce_{str(configer["training"]['bce_weight'])}_"
-        f"Wdice_{str(configer["training"]['dice_weight'])}_"
-        f"Wds_{'_'.join(str(x) for x in configer["training"]['ds_weights'])}_"
-        f"scheduler_{str(configer["scheduler"]['scheduler_type'])}_"
-        f"mode_{configer["scheduler"]['scheduler_mode']}"
-        )
+    """Hash the configuration parameters to generate a unique output file name."""
+    params_to_hash = {
+        "model_config": configer.params,
+    }
     
+    # Convert to sorted JSON string (sort_keys is mandatory!).
+    config_params_dict = {k: v for k, v in params_to_hash.items()}
+    json_str = json.dumps(config_params_dict, sort_keys=True)
+    
+    # Generate the hash.
+    config_hash = hashlib.md5(json_str.encode('utf-8')).hexdigest()[:configer.general_config['hash_length']]
+    
+    output_file_name = f"{configer['model']['model_name']}_{config_hash}_seed{configer.general_config['seed']}"
+    
+    '''
+    output_file_name = (f"{configer['model']['model_name']}_"
+        f"{'_'.join(str(x) for x in configer['model']['feature_list'])}_"
+        f"{configer['training']['solver_type']}_"
+        f"batch_{configer['training']['batch_size']}_"
+        f"HW_{configer['training']['mask_halfwindow']}_"
+        f"Wbce_{str(configer['training']['bce_weight'])}_"
+        f"Wdice_{str(configer['training']['dice_weight'])}_"
+        f"Wds_{'_'.join(str(x) for x in configer['training']['ds_weights'])}_"
+        f"scheduler_{str(configer['scheduler']['scheduler_type'])}_"
+        f"mode_{configer['scheduler']['scheduler_mode']}"
+        )
+    '''
     configer.output_file_name = (output_file_name.replace('.', '_'))
     
     logs_dir = Path(configer.general_config["logs_dir"])
