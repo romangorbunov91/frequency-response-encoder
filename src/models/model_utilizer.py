@@ -49,7 +49,7 @@ def update_optimizer(
         net: nn.Module,
         optim: str,
         lr: float,
-        decay: float,
+        weight_decay: float,
         encoder_lr: Optional[float] = None
     ):
     if hasattr(net, 'encoder_blocks'):
@@ -62,12 +62,12 @@ def update_optimizer(
         params_no_encoder = [p for p in net.parameters() if id(p) not in encoder_param_ids]
 
         param_groups = [
-            {"params": params_no_encoder, "lr": lr, "weight_decay": decay},
-            {"params": encoder_params, "lr": encoder_lr, "weight_decay": decay}
+            {"params": params_no_encoder, "lr": lr, "weight_decay": weight_decay},
+            {"params": encoder_params, "lr": encoder_lr, "weight_decay": weight_decay}
         ]
     else:
         # Default: all parameters.
-        param_groups = [{"params": filter(lambda p: p.requires_grad, net.parameters()), "lr": lr, "weight_decay": decay}]
+        param_groups = [{"params": filter(lambda p: p.requires_grad, net.parameters()), "lr": lr, "weight_decay": weight_decay}]
         
     if optim == "Adam":
         return torch.optim.Adam(param_groups)
@@ -85,17 +85,18 @@ def update_optimizer_simple(
         net: nn.Module,
         optim: str,
         lr: float,
-        decay: float
+        weight_decay: float,
+        **kwargs
     ):
         
     if optim == "Adam":
-        return torch.optim.Adam(net.parameters(), lr=lr, weight_decay=decay)
+        return torch.optim.Adam(net.parameters(), lr=lr, weight_decay=weight_decay, **kwargs)
 
     elif optim == "AdamW":
-        return torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=decay)
+        return torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=weight_decay, **kwargs)
 
     elif optim == "RMSProp":
-        return torch.optim.RMSprop(net.parameters(), lr=lr, weight_decay=decay)
+        return torch.optim.RMSprop(net.parameters(), lr=lr, weight_decay=weight_decay, **kwargs)
     
     else:
         raise NotImplementedError(f"Optimizer: {optim} is not valid.") 
