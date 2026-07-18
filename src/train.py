@@ -264,9 +264,9 @@ class ModelTrainer:
 
             if sched_dict is not None:
                 self.scheduler.load_state_dict(sched_dict)
-                print(f"Scheduler ON: {self.configer['scheduler']['scheduler_type']}")
-            else:
-                print(f"Scheduler OFF")
+            print(f"Scheduler ON: {self.configer['scheduler']['scheduler_type']}")
+        else:
+            print(f"Scheduler OFF")
         
         self.model_size = sum(p.numel() for p in self.net.parameters() if p.requires_grad)
         print(f"Model parameters: {self.model_size}")
