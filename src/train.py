@@ -488,8 +488,7 @@ class ModelTrainer:
             
     def train(self) -> None:
         for n in range(self.configer['training']['epochs']):
-            print("Starting epoch {} of {}.".format(self.epoch + 1, self.configer['training']['epochs'] + self.epoch_init))
-            print('Learning rate:', self.optimizer.param_groups[0]["lr"])
+            print(f"Starting epoch {self.epoch + 1} of {self.configer['training']['epochs'] + self.epoch_init} with learning rate: {self.optimizer.param_groups[0]["lr"]}.")
             
             # Reset learning rate list for this epoch.
             self.lr_list = []
