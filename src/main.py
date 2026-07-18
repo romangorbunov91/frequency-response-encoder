@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # Generate the hash.
     config_hash = hashlib.md5(json_str.encode('utf-8')).hexdigest()[:configer.general_config['hash_length']]
     
-    output_file_name = f"{configer['model']['model_name']}_{config_hash}_seed{configer.general_config['seed']}"
+    output_file_name = f"{configer['model']['model_name']}_{config_hash}_seed_{configer.general_config['seed']}"
     
     '''
     output_file_name = (f"{configer['model']['model_name']}_"
