@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "run_id": "20260718_140852",
+        "run_id": "20260718_201457",
         "model": {
             "model_name": "base-model",
             "input_size": [
@@ -98,14 +98,14 @@
         "seed": 1991
     },
     "summary": {
-        "best_epoch": 2,
+        "best_epoch": 4,
         "lr_at_best_epoch": 0.001,
-        "train_dice_at_best_epoch": 0.45180090487003327,
-        "val___dice_at_best_epoch": 0.47292049080133436,
-        "test__dice_at_best_epoch": 0.4626980535686016,
-        "final_train_dice": 0.45180090487003327,
-        "final_val___dice": 0.47292049080133436,
-        "final_test__dice": 0.4626980535686016
+        "train_dice_at_best_epoch": 0.5044779244065285,
+        "val___dice_at_best_epoch": 0.5750998087227345,
+        "test__dice_at_best_epoch": 0.5252747483551502,
+        "final_train_dice": 0.5044779244065285,
+        "final_val___dice": 0.5750998087227345,
+        "final_test__dice": 0.5252747483551502
     },
     "train_log": [
         {
@@ -139,6 +139,38 @@
             "test_dice": 0.4626980535686016,
             "test_iou": 0.44909250140190127,
             "test_accuracy": 0.9690253525972367
+        },
+        {
+            "epoch": 3,
+            "lr": 0.001,
+            "train_loss": 0.30009809374809265,
+            "train_dice": 0.48558696240186694,
+            "train_iou": 0.4643282714486122,
+            "train_accuracy": 0.9642645221948624,
+            "val_loss": 0.27988425325602295,
+            "val_dice": 0.5571422673761844,
+            "val_iou": 0.51593560539186,
+            "val_accuracy": 0.9562344253063202,
+            "test_loss": 0.29246985390782354,
+            "test_dice": 0.5178988486528396,
+            "test_iou": 0.4879258833825588,
+            "test_accuracy": 0.9613786727190018
+        },
+        {
+            "epoch": 4,
+            "lr": 0.001,
+            "train_loss": 0.29563064098358155,
+            "train_dice": 0.5044779244065285,
+            "train_iou": 0.4780569937825203,
+            "train_accuracy": 0.9619502431154251,
+            "val_loss": 0.2719511644914746,
+            "val_dice": 0.5750998087227345,
+            "val_iou": 0.5301158983260393,
+            "val_accuracy": 0.9556166157126427,
+            "test_loss": 0.2876290798187256,
+            "test_dice": 0.5252747483551502,
+            "test_iou": 0.4938069902360439,
+            "test_accuracy": 0.9611641675233841
         }
     ]
 }
