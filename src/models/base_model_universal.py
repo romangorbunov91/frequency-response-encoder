@@ -110,6 +110,7 @@ class TransformerBottleneck(nn.Module):
         ):
         
         super().__init__()
+        
         '''
         assert channels % num_heads == 0, "channels must be divisible by num_heads"
         
@@ -264,6 +265,7 @@ class _base_model(nn.Module):
             padding=input_conv_kernel_size // 2,
             bias=False
             )
+        
         self.pool = nn.MaxPool1d(kernel_size=2)
         
         # Encoder.
