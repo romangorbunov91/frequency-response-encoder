@@ -8,6 +8,10 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 torch.use_deterministic_algorithms(True)
+#torch.backends.cuda.matmul.allow_tf32=False
+#torch.backends.cudnn.allow_tf32=False
+#torch.backends.cudnn.deterministic=True
+#torch.backends.cudnn.benchmark=False
 
 # Import Utils.
 from src.utils.metrics import AverageMeter, CombinedLoss, dice_coefficient, iou_score, pixel_accuracy
