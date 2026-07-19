@@ -210,10 +210,10 @@ class ModelTrainer:
             )
         
         if optim_dict is None:
-            print(f"Starting training {self.configer['model']['model_name']} from scratch using {self.configer['training']['solver_type']}.")
+            print(f"Starting training {self.configer.output_file_name} from scratch using {self.configer['training']['solver_type']}.")
         else:
             self.optimizer.load_state_dict(optim_dict)
-            print(f"Resuming training {self.configer['model']['model_name']} from epoch {self.epoch} using {self.configer['training']['solver_type']}.")
+            print(f"Resuming training {self.configer.output_file_name} from epoch {self.epoch} using {self.configer['training']['solver_type']}.")
         
         # Setting scheduler.
         if self.configer["scheduler"]['scheduler_type'] is not None:
