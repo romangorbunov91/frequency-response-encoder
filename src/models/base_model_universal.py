@@ -12,7 +12,9 @@ class ResConvBlock(nn.Module):
         stride: int=1,
         dropout: float=0.1
         ):
+
         super().__init__()
+
         self.conv = nn.Sequential(
             nn.GroupNorm(
                 num_groups=1,
@@ -42,6 +44,7 @@ class ResConvBlock(nn.Module):
                 ),
             nn.Dropout1d(p=dropout)
         )
+
         self.skip = nn.Conv1d(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -61,7 +64,9 @@ class AttentionGate(nn.Module):
         ):
 
         super().__init__()
+
         F_int = F_int or (F_g // 2)
+
         self.W_g = nn.Sequential(
             nn.Conv1d(
                 in_channels=F_g,
@@ -229,6 +234,7 @@ class UpSample(nn.Module):
                 num_channels=out_channels),
             nn.GELU()
         )
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.up(x)
 
@@ -266,8 +272,6 @@ class _base_model(nn.Module):
             bias=False
             )
         
-        self.pool = nn.MaxPool1d(kernel_size=2)
-        
         # Encoder.
         self.encoders = nn.ModuleList()
         self.encoders.append(
@@ -283,6 +287,8 @@ class _base_model(nn.Module):
                     out_channels=features[i],
                     dropout=conv_dropout
                 ))
+        
+        self.pool = nn.MaxPool1d(kernel_size=2)
 
         # Bottleneck: Project to higher dim + Global Transformer.
         self.bottleneck_proj = nn.Sequential(
@@ -296,6 +302,7 @@ class _base_model(nn.Module):
                 num_channels=features[-1]),
             nn.GELU()
         )
+
         self.bottleneck_attn = TransformerBottleneck(
             channels=features[-1],
             num_heads=num_heads,
@@ -307,7 +314,6 @@ class _base_model(nn.Module):
         self.upsamples = nn.ModuleList()
         self.att_gates = nn.ModuleList()
         self.decoders = nn.ModuleList()
-        self.ds_convs = nn.ModuleList()
         
         for i in range(self.num_levels - 1, -1, -1):
             self.upsamples.append(
@@ -335,15 +341,6 @@ class _base_model(nn.Module):
                     out_channels=features[i],
                     dropout=conv_dropout
                 ))
-            
-            # Deep supervision for all decoder stages except the final one (i=0).
-            if i > 0:
-                self.ds_convs.append(
-                    nn.Conv1d(
-                        in_channels=features[i],
-                        out_channels=out_channels,
-                        kernel_size=1
-                        ))
         
         # Prediction Head.
         self.final_conv = nn.Conv1d(
@@ -351,8 +348,19 @@ class _base_model(nn.Module):
             out_channels=out_channels,
             kernel_size=1
             )
+        
+        # Deep supervision for all decoder stages except the final one (i=0).
+        self.ds_convs = nn.ModuleList()
+        for i in range(self.num_levels - 1, 0, -1):
+            self.ds_convs.append(
+                nn.Conv1d(
+                    in_channels=features[i],
+                    out_channels=out_channels,
+                    kernel_size=1
+                    ))
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+
         # Encoder.
         x = self.input_conv(x)
         enc_outs = []

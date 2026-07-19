@@ -91,12 +91,11 @@ class AttentionGate(nn.Module):
             )
         self.relu = nn.ReLU(inplace=True)
 
-    def forward(self, g, x):    
-        g1 = self.W_g(g)
-        x1 = self.W_x(x)
-        psi = self.relu(g1 + x1)
-        psi = self.psi(psi)
-        return x * psi
+    def forward(self,
+            g: torch.Tensor,
+            x: torch.Tensor
+            ) -> torch.Tensor:   
+        return x * self.psi(self.relu(self.W_g(g) + self.W_x(x)))
 
 class TransformerBottleneck(nn.Module):
     def __init__(self,
@@ -108,15 +107,18 @@ class TransformerBottleneck(nn.Module):
 
         super().__init__()
 
-        self.norm1 = nn.GroupNorm(
+        self.norm_attn = nn.GroupNorm(
             num_groups=1,
             num_channels=channels
             )
+        
         self.attn = nn.MultiheadAttention(channels, num_heads, dropout=dropout, batch_first=True)
-        self.norm2 = nn.GroupNorm(
+
+        self.norm_mlp = nn.GroupNorm(
             num_groups=1,
             num_channels=channels
             )
+        
         self.mlp = nn.Sequential(
             nn.Linear(
                 in_features=channels,
@@ -131,13 +133,13 @@ class TransformerBottleneck(nn.Module):
 
     def forward(self, x):
         # x: (B, C, L)
-        x_norm = self.norm1(x)
+        x_norm = self.norm_attn(x)
         x_t = x_norm.transpose(1, 2)  # (B, L, C)
         attn_out, _ = self.attn(x_t, x_t, x_t)
         x = x + attn_out.transpose(1, 2)
         
-        x_norm2 = self.norm2(x)
-        mlp_out = self.mlp(x_norm2.transpose(1, 2)).transpose(1, 2)
+        x_norm_mlp = self.norm_mlp(x)
+        mlp_out = self.mlp(x_norm_mlp.transpose(1, 2)).transpose(1, 2)
         return x + mlp_out
 
 class UpSample(nn.Module):
@@ -163,7 +165,7 @@ class UpSample(nn.Module):
                 num_channels=out_channels),
             nn.GELU()
         )
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.up(x)
 
 
@@ -179,6 +181,7 @@ class _base_model(nn.Module):
         super(_base_model, self).__init__()
         
         self.deep_supervision = deep_supervision
+
         self.input_conv = nn.Conv1d(
                 in_channels=in_channels,
                 out_channels=features[0],
@@ -187,11 +190,13 @@ class _base_model(nn.Module):
                 padding=2,
                 bias=False
                 )
+        
         # Encoder.
         self.enc1 = ResConvBlock(features[0], features[0])
         self.enc2 = ResConvBlock(features[0], features[1])
         self.enc3 = ResConvBlock(features[1], features[2])
         self.enc4 = ResConvBlock(features[2], features[3])
+        
         self.pool = nn.MaxPool1d(kernel_size=2)
 
         # Bottleneck: Project to higher dim + Global Transformer.
@@ -229,13 +234,14 @@ class _base_model(nn.Module):
         self.att1 = AttentionGate(features[0], features[0], features[0]//2)
         self.dec1 = ResConvBlock(features[0]*2, features[0])
 
-        # Prediction Heads
+        # Prediction Head.
         self.final_conv = nn.Conv1d(
             in_channels=features[0],
             out_channels=out_channels,
             kernel_size=1
             )
         
+        # Deep supervision for all decoder stages except the final one.
         self.ds_convs = nn.ModuleList([
             nn.Conv1d(
                 in_channels=features[3],
@@ -251,7 +257,9 @@ class _base_model(nn.Module):
                 kernel_size=1)
             ])
 
-    def forward(self, x):
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+
         # Encoder
         e1 = self.enc1(self.input_conv(x))
         e2 = self.enc2(self.pool(e1))

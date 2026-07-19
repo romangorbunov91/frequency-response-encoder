@@ -11,7 +11,9 @@ class ResConvBlock(nn.Module):
         stride: int=1,
         dropout: float=0.1
         ):
+
         super().__init__()
+
         self.conv = nn.Sequential(
             nn.GroupNorm(
                 num_groups=1,
@@ -41,6 +43,7 @@ class ResConvBlock(nn.Module):
                 ),
             nn.Dropout1d(p=dropout)
         )
+
         self.skip = nn.Conv1d(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -60,6 +63,7 @@ class AttentionGate(nn.Module):
         ):
 
         super().__init__()
+
         self.W_g = nn.Sequential(
             nn.Conv1d(
                 in_channels=F_g,
@@ -93,12 +97,11 @@ class AttentionGate(nn.Module):
             )
         self.relu = nn.ReLU(inplace=True)
 
-    def forward(self, g, x):    
-        g1 = self.W_g(g)
-        x1 = self.W_x(x)
-        psi = self.relu(g1 + x1)
-        psi = self.psi(psi)
-        return x * psi
+    def forward(self,
+            g: torch.Tensor,
+            x: torch.Tensor
+            ) -> torch.Tensor:   
+        return x * self.psi(self.relu(self.W_g(g) + self.W_x(x)))
 
 class TransformerBottleneck(nn.Module):
     def __init__(self,
@@ -172,6 +175,7 @@ class UpSample(nn.Module):
                 num_channels=out_channels),
             nn.GELU()
         )
+        
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.up(x)
 
@@ -239,26 +243,32 @@ class _base_model(nn.Module):
             mlp_ratio=4.0,
             dropout=0.1)
         
-        self.upsamples = nn.ModuleList([
-            UpSample(features[4], features[3]),
-            UpSample(features[3], features[2]),
-            UpSample(features[2], features[1]),
-            UpSample(features[1], features[0])
-        ])
+        # Decoder with Attention Gated Skip Connections.
+        self.upsamples = nn.ModuleList()
+        self.att_gates = nn.ModuleList()
+        self.decoders = nn.ModuleList()
 
-        self.att_gates = nn.ModuleList([
-            AttentionGate(features[3], features[3], features[3]//2),
-            AttentionGate(features[2], features[2], features[2]//2),
-            AttentionGate(features[1], features[1], features[1]//2),
-            AttentionGate(features[0], features[0], features[0]//2)
-        ])
+        self.upsamples.append(UpSample(features[4], features[3]))
+        self.att_gates.append(AttentionGate(features[3], features[3], features[3]//2))
+        self.decoders.append(ResConvBlock(features[3]*2, features[3]))
 
-        self.decoders = nn.ModuleList([
-            ResConvBlock(features[3]*2, features[3]),
-            ResConvBlock(features[2]*2, features[2]),
-            ResConvBlock(features[1]*2, features[1]),
-            ResConvBlock(features[0]*2, features[0])
-        ])
+        self.upsamples.append(UpSample(features[3], features[2]))
+        self.att_gates.append(AttentionGate(features[2], features[2], features[2]//2))
+        self.decoders.append(ResConvBlock(features[2]*2, features[2]))
+
+        self.upsamples.append(UpSample(features[2], features[1]))
+        self.att_gates.append(AttentionGate(features[1], features[1], features[1]//2))
+        self.decoders.append(ResConvBlock(features[1]*2, features[1]))
+
+        self.upsamples.append(UpSample(features[1], features[0]))
+        self.att_gates.append(AttentionGate(features[0], features[0], features[0]//2))
+        self.decoders.append(ResConvBlock(features[0]*2, features[0]))
+        
+        self.final_conv = nn.Conv1d(
+            in_channels=features[0],
+            out_channels=out_channels,
+            kernel_size=1
+            )        
         
         self.ds_convs = nn.ModuleList([
             nn.Conv1d(
@@ -275,13 +285,7 @@ class _base_model(nn.Module):
                 kernel_size=1)
             ])
         
-        self.final_conv = nn.Conv1d(
-            in_channels=features[0],
-            out_channels=out_channels,
-            kernel_size=1
-            )
-        
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         
         # Encoder.
         e1 = self.encoders[0](self.input_conv(x))
