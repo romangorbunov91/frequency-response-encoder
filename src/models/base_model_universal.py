@@ -199,7 +199,7 @@ class TransformerBottleneck(nn.Module):
         attn_out = self.out_proj(attn_out)
         '''
         
-        x = x + attn_out.transpose(1, 2)
+        x += attn_out.transpose(1, 2)
         
         x_norm_mlp = self.norm_mlp(x)
         mlp_out = self.mlp(x_norm_mlp.transpose(1, 2)).transpose(1, 2)
