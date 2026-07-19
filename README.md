@@ -64,5 +64,5 @@ python -m src.main --hypes src\config\base-model-config.toml
 ```
 или
 ```
-python -m src.main --hypes src\config\base-model-config.toml --resume checkpoints\best_base-model_af79739e_seed1991.pth
+python -m src.main --hypes src\config\base-model-config.toml --resume checkpoints\best_base-model-clone_afb01fab_seed_1991.pth
 ```
