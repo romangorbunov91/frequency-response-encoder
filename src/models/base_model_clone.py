@@ -260,12 +260,6 @@ class _base_model(nn.Module):
             ResConvBlock(features[0]*2, features[0])
         ])
         
-        self.final_conv = nn.Conv1d(
-            in_channels=features[0],
-            out_channels=out_channels,
-            kernel_size=1
-            )
-        
         self.ds_convs = nn.ModuleList([
             nn.Conv1d(
                 in_channels=features[3],
@@ -280,7 +274,13 @@ class _base_model(nn.Module):
                 out_channels=out_channels,
                 kernel_size=1)
             ])
-
+        
+        self.final_conv = nn.Conv1d(
+            in_channels=features[0],
+            out_channels=out_channels,
+            kernel_size=1
+            )
+        
     def forward(self, x):
         
         # Encoder.

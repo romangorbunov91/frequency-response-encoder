@@ -111,6 +111,11 @@ class TransformerBottleneck(nn.Module):
         
         super().__init__()
         
+        self.norm_attn = nn.GroupNorm(
+            num_groups=1,
+            num_channels=channels
+            )
+
         '''
         assert channels % num_heads == 0, "channels must be divisible by num_heads"
         
@@ -148,11 +153,6 @@ class TransformerBottleneck(nn.Module):
             dropout=dropout,
             batch_first=True)
         # END delete section.
-        
-        self.norm_attn = nn.GroupNorm(
-            num_groups=1,
-            num_channels=channels
-            )
 
         self.norm_mlp = nn.GroupNorm(
             num_groups=1,
@@ -199,7 +199,7 @@ class TransformerBottleneck(nn.Module):
         attn_out = self.out_proj(attn_out)
         '''
         
-        x += attn_out.transpose(1, 2)
+        x = x + attn_out.transpose(1, 2)
         
         x_norm_mlp = self.norm_mlp(x)
         mlp_out = self.mlp(x_norm_mlp.transpose(1, 2)).transpose(1, 2)
