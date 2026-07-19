@@ -19,9 +19,9 @@ dataset_name = "zeros-poles-dataset-very-noisy-deg"
 [training]
 solver_type = "Adam"
 batch_size = 360
-epochs = 5
+epochs = 5000
 early_stop_number = 50
-base_lr = 1e-3
+base_lr = 1e-5
 # 1e-4 for Adam/RMSProp, or 1e-2 for AdamW.
 weight_decay = 1e-4
 mask_halfwindow = 8
@@ -35,13 +35,13 @@ checkpoints_save_policy = "best"
 checkpoints_metric = "dice"
 
 [scheduler]
-scheduler_type = "WarmupCosineAnnealingWarmRestarts"
-scheduler_mode = "batch"
+scheduler_type = "CosineAnnealingLR"
+scheduler_mode = "epoch"
 scheduler_warmup_steps = 100
 scheduler_T_max = 20
 scheduler_T_0 = 100
 scheduler_T_mult = 1
-scheduler_eta_min = 1e-6
+scheduler_eta_min = 1e-7
 scheduler_decay_rate = 0.1
 
 [transforms]
