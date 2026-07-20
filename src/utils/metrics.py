@@ -57,7 +57,7 @@ class CombinedLoss(nn.Module):
         self.dice_weight = dice_weight
         self.bce = nn.BCEWithLogitsLoss()
         self.dice = DiceLoss()
-        self.ds_weights = ds_weights if ds_weights is not None else [0.125, 0.25, 0.5]
+        self.ds_weights = ds_weights if ds_weights is not None else [0.0, 0.0, 0.0]
     
     def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         if targets.dtype != torch.float32:
@@ -68,6 +68,7 @@ class CombinedLoss(nn.Module):
             all_logits = ds_logits + [main_logits]
             all_weights = self.ds_weights + [1.0]  # Main prediction always gets 1.0.
         else:
+            # Main prediction only, no deep supervision.
             all_logits = [logits]
             all_weights = [1.0]
 

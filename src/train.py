@@ -202,9 +202,9 @@ class ModelTrainer:
         # Setting optimizer.
         self.optimizer = update_optimizer_simple(
             net = self.net,
-            optim = self.configer["training"]['solver_type'],
-            lr = self.configer["training"]['base_lr'],
-            weight_decay = self.configer["training"]['weight_decay']
+            optim = self.configer['training']['solver_type'],
+            lr = self.configer['training']['base_lr'],
+            weight_decay = self.configer['training']['weight_decay']
             )
         
         if optim_dict is None:
